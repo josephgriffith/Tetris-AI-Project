@@ -1,15 +1,25 @@
 
 class rotated_piece(object):
+    def __init__(self, grid):
+        self.grid = grid
+
     def is_outside_board(x, y):
         pass
 
+    def __str__(self):
+        return str(self.grid)
+
 class piece(object):
     def __init__(self, grid, num_rotations):
-        pass
+        self.grid = grid
+        self.num_rotations = num_rotations
 
     def rotations(self):
         # Generator that returns all the rotations for this piece.
-        pass
+        rotated_grid = self.grid
+        for i in range(self.num_rotations):
+            yield rotated_piece(rotated_grid)
+            rotated_grid = list(zip(*rotated_grid[::-1]))
 
 def pieces():
     # generator that returns all the non-rotated pieces
@@ -54,3 +64,8 @@ class board(object):
     def valid_moves(self, piece):
         # generator that returns all the valid moves for the given piece
         pass
+
+if __name__ == "__main__":
+    for p in pieces():
+        for r in p.rotations():
+            print(r)
