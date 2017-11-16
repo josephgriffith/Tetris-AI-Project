@@ -23,32 +23,32 @@ class piece(object):
 
 def pieces():
     # generator that returns all the non-rotated pieces
-    yield piece([[1],
-                 [1],
-                 [1],
-                 [1]], 2)
+    yield piece(((1,),
+                 (1,),
+                 (1,),
+                 (1,)), 2)
 
-    yield piece([[0, 1, 0],
-                 [1, 1, 1]], 4)
+    yield piece(((0, 1, 0),
+                 (1, 1, 1)), 4)
 
-    yield piece([[1, 0],
-                 [1, 0],
-                 [1, 1]], 4)
+    yield piece(((1, 0),
+                 (1, 0),
+                 (1, 1)), 4)
 
-    yield piece([[0, 1],
-                 [0, 1],
-                 [1, 1]], 4)
+    yield piece(((0, 1),
+                 (0, 1),
+                 (1, 1)), 4)
 
-    yield piece([[1, 1],
-                 [1, 1]], 1)
+    yield piece(((1, 1),
+                 (1, 1)), 1)
 
-    yield piece([[1, 0],
-                 [1, 1],
-                 [0, 1]], 2)
+    yield piece(((1, 0),
+                 (1, 1),
+                 (0, 1)), 2)
 
-    yield piece([[0, 1],
-                 [1, 1],
-                 [1, 0]], 2)
+    yield piece(((0, 1),
+                 (1, 1),
+                 (1, 0)), 2)
 
 class board(object):
     def fits_row(self, rotated_piece, col):
