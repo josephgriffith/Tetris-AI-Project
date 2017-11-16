@@ -72,6 +72,23 @@ class board(object):
                 if rotated_piece.grid[piece_x][piece_y] == 1:
                     self.board[piece_x + x][piece_y + y] = 1
 
+        # Clear completed lines
+        board2 = [[0] * 20 for i in range(10)]
+        board2_row = 19
+        for y in range(19, 0, -1):
+            s = 0
+            for x in range(10):
+                s += self.board[x][y]
+            if s != 10:
+                for x in range(10):
+                    board2[x][board2_row] = self.board[x][y]
+                board2_row -= 1
+        self.board = board2
+
+    def drop(self, rotated_piece, col):
+        row = self.fits_row(rotated_piece, col)
+        self.place(rotated_piece, col, row)
+
 
     def is_game_over(self):
         pass
@@ -95,10 +112,13 @@ class board(object):
 
 if __name__ == "__main__":
     b = board()
-    for p in pieces():
-        for rot in p.rotations():
-            col = 3
-            row = b.fits_row(rot, col)
-            b.place(rot, col, row)
-            print(b)
-
+    (I, T, L, J, O, S, Z) = pieces()
+    flatI = list(I.rotations())[0]
+    tallI = list(I.rotations())[1]
+    for i in range(10):
+        b.drop(tallI, i)
+        print(b)
+    b.drop(list(S.rotations())[1], 4)
+    print(b)
+    b.drop(list(T.rotations())[2], 4)
+    print(b)
