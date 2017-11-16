@@ -1,3 +1,5 @@
+import time
+import random
 
 class rotated_piece(object):
     def __init__(self, grid):
@@ -53,7 +55,10 @@ def pieces():
 
 class board(object):
     def __init__(self):
-        self.board = [[0] * 20 for i in range(10)]
+        self.board = self.make_board()
+
+    def make_board(self):
+        return [[0] * 20 for i in range(10)]
 
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
@@ -65,7 +70,6 @@ class board(object):
                     if piece_y + offset_y == 20:
                         # Off the bottom of the board
                         return offset_y - 1;
-                    print(piece_x, col, piece_y, offset_y)
                     if self.board[piece_x + col][piece_y + offset_y] \
                        + rotated_piece.grid[piece_x][piece_y] == 2:
                         # Did not fit
@@ -78,7 +82,7 @@ class board(object):
                     self.board[piece_x + x][piece_y + y] = 1
 
         # Clear completed lines
-        board2 = [[0] * 20 for i in range(10)]
+        board2 = self.make_board()
         board2_row = 19
         for y in range(19, 0, -1):
             s = 0
@@ -103,7 +107,7 @@ class board(object):
             for col in range(10):
                 row = self.fits_row(rot, col)
                 if row >= 0:
-                    yield (rot, row, col)
+                    yield (rot, col, row)
 
     def __str__(self):
         ret = "+" + "-" * 10 + "+" + "\n"
@@ -120,13 +124,12 @@ class board(object):
 
 if __name__ == "__main__":
     b = board()
-    (I, T, L, J, O, S, Z) = pieces()
-    flatI = list(I.rotations())[0]
-    tallI = list(I.rotations())[1]
-    for i in range(10):
-        b.drop(tallI, i)
+    all_pieces = list(pieces())
+    for i in range(20):
+        p = random.choice(all_pieces)
+        moves = b.valid_moves(p)
+        (r, x, y) = random.choice(list(moves))
+        b.place(r, x, y)
         print(b)
-    b.drop(list(S.rotations())[1], 4)
-    print(b)
-    b.drop(list(T.rotations())[2], 4)
-    print(b)
+        time.sleep(.5)
+
