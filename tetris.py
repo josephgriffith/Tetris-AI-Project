@@ -2,9 +2,8 @@
 class rotated_piece(object):
     def __init__(self, grid):
         self.grid = grid
-
-    def is_outside_board(x, y):
-        pass
+        self.height = len(grid)
+        self.width = len(grid[0])
 
     def __str__(self):
         return str(self.grid)
@@ -51,12 +50,27 @@ def pieces():
                  (1, 0)), 2)
 
 class board(object):
+    def __init__(self):
+        self.board = [[0] * 10 for i in range(20)]
+
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
-        pass
+        for offset_y in range(20):
+            for piece_x in range(rotated_piece.width):
+                for piece_y in range(rotated_piece.height):
+                    if piece_y + offset_y == 20:
+                        return offset_y - 1;
+                    if self.board[piece_y + offset_y][piece_x + col] \
+                       + rotated_piece.grid[piece_y][piece_x] == 2:
+                        # Did not fit
+                        return offset_y-1
 
-    def fits(self, rotated_piece, x, y):
-        pass
+    def place(self, rotated_piece, x, y):
+        for piece_x in range(rotated_piece.width):
+            for piece_y in range(rotated_piece.height):
+                if rotated_piece.grid[piece_y][piece_x] == 1:
+                    self.board[piece_y + y][piece_x + x] = 1
+
 
     def is_game_over(self):
         pass
@@ -65,7 +79,25 @@ class board(object):
         # generator that returns all the valid moves for the given piece
         pass
 
+    def __str__(self):
+        ret = "+" + "-" * 10 + "+" + "\n"
+        for i in range(20):
+            ret += "|"
+            for j in range(10):
+                if self.board[i][j] == 0:
+                    ret += " "
+                else:
+                    ret += "#"
+            ret += "|\n"
+        ret += "+" + "-" * 10 + "+" + "\n"
+        return ret
+
 if __name__ == "__main__":
+    b = board()
     for p in pieces():
-        for r in p.rotations():
-            print(r)
+        for rot in p.rotations():
+            col = 3
+            row = b.fits_row(rot, col)
+            b.place(rot, col, row)
+            print(b)
+
