@@ -2,8 +2,8 @@
 class rotated_piece(object):
     def __init__(self, grid):
         self.grid = grid
-        self.height = len(grid)
-        self.width = len(grid[0])
+        self.height = len(grid[0])
+        self.width = len(grid)
 
     def __str__(self):
         return str(self.grid)
@@ -51,25 +51,26 @@ def pieces():
 
 class board(object):
     def __init__(self):
-        self.board = [[0] * 10 for i in range(20)]
+        self.board = [[0] * 20 for i in range(10)]
 
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
-        for offset_y in range(20):
+        for offset_y in range(21):
             for piece_x in range(rotated_piece.width):
                 for piece_y in range(rotated_piece.height):
                     if piece_y + offset_y == 20:
+                        # Off the bottom of the board
                         return offset_y - 1;
-                    if self.board[piece_y + offset_y][piece_x + col] \
-                       + rotated_piece.grid[piece_y][piece_x] == 2:
+                    if self.board[piece_x + col][piece_y + offset_y] \
+                       + rotated_piece.grid[piece_x][piece_y] == 2:
                         # Did not fit
                         return offset_y-1
 
     def place(self, rotated_piece, x, y):
         for piece_x in range(rotated_piece.width):
             for piece_y in range(rotated_piece.height):
-                if rotated_piece.grid[piece_y][piece_x] == 1:
-                    self.board[piece_y + y][piece_x + x] = 1
+                if rotated_piece.grid[piece_x][piece_y] == 1:
+                    self.board[piece_x + x][piece_y + y] = 1
 
 
     def is_game_over(self):
@@ -81,10 +82,10 @@ class board(object):
 
     def __str__(self):
         ret = "+" + "-" * 10 + "+" + "\n"
-        for i in range(20):
+        for y in range(20):
             ret += "|"
-            for j in range(10):
-                if self.board[i][j] == 0:
+            for x in range(10):
+                if self.board[x][y] == 0:
                     ret += " "
                 else:
                     ret += "#"
