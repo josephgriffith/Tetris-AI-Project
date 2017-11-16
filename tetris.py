@@ -7,6 +7,8 @@ class rotated_piece(object):
 
     def __str__(self):
         return str(self.grid)
+    def __repr__(self):
+        return "rotated_piece(" + repr(self.grid) + ")"
 
 class piece(object):
     def __init__(self, grid, num_rotations):
@@ -55,12 +57,15 @@ class board(object):
 
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
+        if rotated_piece.width + col >= 10:
+            return -1
         for offset_y in range(21):
             for piece_x in range(rotated_piece.width):
                 for piece_y in range(rotated_piece.height):
                     if piece_y + offset_y == 20:
                         # Off the bottom of the board
                         return offset_y - 1;
+                    print(piece_x, col, piece_y, offset_y)
                     if self.board[piece_x + col][piece_y + offset_y] \
                        + rotated_piece.grid[piece_x][piece_y] == 2:
                         # Did not fit
@@ -89,13 +94,16 @@ class board(object):
         row = self.fits_row(rotated_piece, col)
         self.place(rotated_piece, col, row)
 
-
     def is_game_over(self):
         pass
 
     def valid_moves(self, piece):
         # generator that returns all the valid moves for the given piece
-        pass
+        for rot in piece.rotations():
+            for col in range(10):
+                row = self.fits_row(rot, col)
+                if row >= 0:
+                    yield (rot, row, col)
 
     def __str__(self):
         ret = "+" + "-" * 10 + "+" + "\n"
