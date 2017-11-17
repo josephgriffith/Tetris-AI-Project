@@ -84,7 +84,7 @@ class board(object):
         # Clear completed lines
         board2 = self.make_board()
         board2_row = 19
-        for y in range(19, 0, -1):
+        for y in range(19, -1, -1):
             s = 0
             for x in range(10):
                 s += self.board[x][y]
@@ -122,14 +122,19 @@ class board(object):
         ret += "+" + "-" * 10 + "+" + "\n"
         return ret
 
-if __name__ == "__main__":
+def play_random_game():
     b = board()
     all_pieces = list(pieces())
-    for i in range(20):
+    while(True):
         p = random.choice(all_pieces)
-        moves = b.valid_moves(p)
-        (r, x, y) = random.choice(list(moves))
+        moves = list(b.valid_moves(p))
+        if len(moves) == 0:
+            break
+        (r, x, y) = random.choice(moves)
         b.place(r, x, y)
         print(b)
         time.sleep(.5)
+
+if __name__ == "__main__":
+    play_random_game()
 
