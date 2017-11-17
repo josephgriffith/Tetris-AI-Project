@@ -62,7 +62,7 @@ class board(object):
 
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
-        if rotated_piece.width + col >= 10:
+        if rotated_piece.width + col > 10:
             return -1
         for offset_y in range(21):
             for piece_x in range(rotated_piece.width):
@@ -135,6 +135,27 @@ def play_random_game():
         print(b)
         time.sleep(.25)
 
+def play_min_height_game():
+    b = board()
+    all_pieces = list(pieces())
+    while(True):
+        p = random.choice(all_pieces)
+        moves = list(b.valid_moves(p))
+        if len(moves) == 0:
+            break
+        max_move = None
+        max_y = -1
+        for move in moves:
+            y = move[2]
+            if y > max_y:
+                max_move = move
+                max_y = y
+        (r, x, y) = max_move
+        b.place(r, x, y)
+        print(b)
+        time.sleep(.25)
+
 if __name__ == "__main__":
-    play_random_game()
+    #play_random_game()
+    play_min_height_game()
 
