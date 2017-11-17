@@ -133,7 +133,7 @@ def play_random_game():
         (r, x, y) = random.choice(moves)
         b.place(r, x, y)
         print(b)
-        time.sleep(.5)
+        time.sleep(.25)
 
 if __name__ == "__main__":
     play_random_game()
