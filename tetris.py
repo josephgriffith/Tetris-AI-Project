@@ -54,20 +54,22 @@ def pieces():
                  ("Z", None)), 2)
 
 class board(object):
-    def __init__(self):
+    def __init__(self, width=10, height=20):
+        self.width = width
+        self.height = height
         self.board = self.make_board()
 
     def make_board(self):
-        return [[None] * 20 for i in range(10)]
+        return [[None] * self.height for i in range(self.width)]
 
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
-        if rotated_piece.width + col > 10:
+        if rotated_piece.width + col > self.width:
             return -1
-        for offset_y in range(21):
+        for offset_y in range(self.height + 1):
             for piece_x in range(rotated_piece.width):
                 for piece_y in range(rotated_piece.height):
-                    if piece_y + offset_y == 20:
+                    if piece_y + offset_y == self.height:
                         # Off the bottom of the board
                         return offset_y - 1;
                     if self.board[piece_x + col][piece_y + offset_y] != None and rotated_piece.grid[piece_x][piece_y] != None:
@@ -83,14 +85,14 @@ class board(object):
 
         # Clear completed lines
         board2 = self.make_board()
-        board2_row = 19
-        for y in range(19, -1, -1):
+        board2_row = self.height - 1
+        for y in range(self.height - 1, -1, -1):
             s = 0
-            for x in range(10):
+            for x in range(self.width):
                 if self.board[x][y] != None:
                     s += 1
-            if s != 10:
-                for x in range(10):
+            if s != self.width:
+                for x in range(self.width):
                     board2[x][board2_row] = self.board[x][y]
                 board2_row -= 1
         self.board = board2
@@ -105,23 +107,23 @@ class board(object):
     def valid_moves(self, piece):
         # generator that returns all the valid moves for the given piece
         for rot in piece.rotations():
-            for col in range(10):
+            for col in range(self.width):
                 row = self.fits_row(rot, col)
                 if row >= 0:
                     yield (rot, col, row)
 
     def __str__(self):
-        ret = "+" + "-" * 10 + "+" + "\n"
-        for y in range(20):
+        ret = "+" + "-" * self.width + "+" + "\n"
+        for y in range(self.height):
             ret += "|"
-            for x in range(10):
+            for x in range(self.width):
                 c = self.board[x][y]
                 if c is None:
                     ret += " "
                 else:
                     ret += str(c) # TODO: remove str() call
             ret += "|\n"
-        ret += "+" + "-" * 10 + "+" + "\n"
+        ret += "+" + "-" * self.width + "+" + "\n"
         return ret
 
 def play_random_game():
