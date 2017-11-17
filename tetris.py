@@ -26,39 +26,39 @@ class piece(object):
 
 def pieces():
     # generator that returns all the non-rotated pieces
-    yield piece(((1,),
-                 (1,),
-                 (1,),
-                 (1,)), 2)
+    yield piece((("I",),
+                 ("I",),
+                 ("I",),
+                 ("I",)), 2)
 
-    yield piece(((0, 1, 0),
-                 (1, 1, 1)), 4)
+    yield piece(((None, "T", None),
+                 ("T", "T", "T")), 4)
 
-    yield piece(((1, 0),
-                 (1, 0),
-                 (1, 1)), 4)
+    yield piece((("L", None),
+                 ("L", None),
+                 ("L", "L")), 4)
 
-    yield piece(((0, 1),
-                 (0, 1),
-                 (1, 1)), 4)
+    yield piece(((None, "J"),
+                 (None, "J"),
+                 ("J", "J")), 4)
 
-    yield piece(((1, 1),
-                 (1, 1)), 1)
+    yield piece((("O", "O"),
+                 ("O", "O")), 1)
 
-    yield piece(((1, 0),
-                 (1, 1),
-                 (0, 1)), 2)
+    yield piece((("S", None),
+                 ("S", "S"),
+                 (None, "S")), 2)
 
-    yield piece(((0, 1),
-                 (1, 1),
-                 (1, 0)), 2)
+    yield piece(((None, "Z"),
+                 ("Z", "Z"),
+                 ("Z", None)), 2)
 
 class board(object):
     def __init__(self):
         self.board = self.make_board()
 
     def make_board(self):
-        return [[0] * 20 for i in range(10)]
+        return [[None] * 20 for i in range(10)]
 
     def fits_row(self, rotated_piece, col):
         # Returns the one and only one row that the piece must be placed at in this column.
@@ -70,16 +70,16 @@ class board(object):
                     if piece_y + offset_y == 20:
                         # Off the bottom of the board
                         return offset_y - 1;
-                    if self.board[piece_x + col][piece_y + offset_y] \
-                       + rotated_piece.grid[piece_x][piece_y] == 2:
+                    if self.board[piece_x + col][piece_y + offset_y] != None and rotated_piece.grid[piece_x][piece_y] != None:
                         # Did not fit
                         return offset_y-1
 
     def place(self, rotated_piece, x, y):
         for piece_x in range(rotated_piece.width):
             for piece_y in range(rotated_piece.height):
-                if rotated_piece.grid[piece_x][piece_y] == 1:
-                    self.board[piece_x + x][piece_y + y] = 1
+                c = rotated_piece.grid[piece_x][piece_y]
+                if c != None:
+                    self.board[piece_x + x][piece_y + y] = c
 
         # Clear completed lines
         board2 = self.make_board()
@@ -87,7 +87,8 @@ class board(object):
         for y in range(19, -1, -1):
             s = 0
             for x in range(10):
-                s += self.board[x][y]
+                if self.board[x][y] != None:
+                    s += 1
             if s != 10:
                 for x in range(10):
                     board2[x][board2_row] = self.board[x][y]
@@ -114,10 +115,11 @@ class board(object):
         for y in range(20):
             ret += "|"
             for x in range(10):
-                if self.board[x][y] == 0:
+                c = self.board[x][y]
+                if c is None:
                     ret += " "
                 else:
-                    ret += "#"
+                    ret += str(c) # TODO: remove str() call
             ret += "|\n"
         ret += "+" + "-" * 10 + "+" + "\n"
         return ret
