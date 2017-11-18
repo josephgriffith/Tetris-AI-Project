@@ -26,10 +26,28 @@ class piece(object):
 
 def pieces():
     # generator that returns all the non-rotated pieces
-    yield piece((("I",),
-                 ("I",),
-                 ("I",),
-                 ("I",)), 2)
+    red = '\033[91m'
+    green = '\033[92m'
+    yellow = '\033[93m'
+    blue = '\033[94m'
+    purple = '\033[95m'
+    teal = '\033[96m'
+    grey = '\033[97m'
+    black = '\033[98m'
+    #black = '\033[99m'
+    
+    end = '\033[0m'
+    bold = '\033[1m'
+    I = red + bold + '\u22A0' + end
+
+    #yield piece((("I",),
+    #             ("I",),
+    #             ("I",),
+    #             ("I",)), 2)
+    yield piece(((I,),
+                 (I,),
+                 (I,),
+                 (I,)), 2)
 
     yield piece(((None, "T", None),
                  ("T", "T", "T")), 4)
