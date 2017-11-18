@@ -35,7 +35,7 @@ def pieces():
     grey = '\033[97m'
     black = '\033[98m'
     #black = '\033[99m'
-    
+
     end = '\033[0m'
     bold = '\033[1m'
     I = red + bold + '\u22A0' + end
@@ -139,7 +139,7 @@ class board(object):
                 if c is None:
                     ret += " "
                 else:
-                    ret += str(c) # TODO: remove str() call
+                    ret += c
             ret += "|\n"
         ret += "+" + "-" * self.width + "+" + "\n"
         return ret
