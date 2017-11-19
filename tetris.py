@@ -39,7 +39,9 @@ def pieces():
     end = '\033[0m'
     bold = '\033[1m'
 
-    char = chr(164)
+    #char = chr(35)          # octothorpe
+    char = chr(164)         # spiky circle
+    #char = chr(449)         # ||                   ERRORS in console
     I = red + bold + char + end
     T = green + bold + char + end
     L = yellow + bold + char + end
@@ -148,6 +150,37 @@ class board(object):
             ret += "|\n"
         ret += "+" + "-" * self.width + "+" + "\n"
         return ret
+
+    #spaced print 
+    #def __str__(self):
+    #   ret = "+" + "--" * (self.width-1) + "-+" + "\n"
+    #   for y in range(self.height):
+    #       ret += "|"
+    #       for x in range(self.width):
+    #           c = self.board[x][y]
+    #           if c is None:
+    #               ret += "  "
+    #           else:
+    #               ret += c + " "
+    #       ret += "\b|\n"
+    #   ret += "+" + "--" * (self.width-1) + "-+" + "\n"
+    #   return ret
+  
+    #grid print
+    #def __str__(self):
+    #    under = '\033[4m'
+    #    end = '\033[0m'
+    #    ret = under + "  " * self.width + " " + "\n"
+    #    for y in range(self.height):
+    #        ret += under + "|"
+    #        for x in range(self.width):
+    #            c = self.board[x][y]
+    #            if c is None:
+    #                ret += under + " |"
+    #            else:
+    #                ret += under + c + under + "|"
+    #        ret += "\n"
+    #    return ret
 
 def play_random_game():
     b = board()
