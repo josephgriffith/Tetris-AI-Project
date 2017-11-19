@@ -38,8 +38,8 @@ def pieces():
 
     end = '\033[0m'
     bold = '\033[1m'
-    
-    char = chr(164) 
+
+    char = chr(164)
     I = red + bold + char + end
     T = green + bold + char + end
     L = yellow + bold + char + end
@@ -48,6 +48,7 @@ def pieces():
     S = teal + bold + char + end
     Z = purple + bold + char + end
 
+    # Note these are mirrored here since X is the first dimension and Y is the second.
     yield piece(((I,),
                  (I,),
                  (I,),
@@ -56,24 +57,24 @@ def pieces():
     yield piece(((None, T, None),
                  (T, T, T)), 4)
 
-    yield piece(((L, None),
-                 (L, None),
-                 (L, L)), 4)
-
-    yield piece(((None, J),
-                 (None, J),
+    yield piece(((J, None),
+                 (J, None),
                  (J, J)), 4)
+
+    yield piece(((None, L),
+                 (None, L),
+                 (L, L)), 4)
 
     yield piece(((O, O),
                  (O, O)), 1)
 
-    yield piece(((S, None),
-                 (S, S),
-                 (None, S)), 2)
-
-    yield piece(((None, Z),
+    yield piece(((Z, None),
                  (Z, Z),
-                 (Z, None)), 2)
+                 (None, Z)), 2)
+
+    yield piece(((None, S),
+                 (S, S),
+                 (S, None)), 2)
 
 class board(object):
     def __init__(self, width=10, height=20):
@@ -188,10 +189,11 @@ def displayAllRotations():
         x, y = 0, 0
         for rot in i.rotations():
             b.place(rot, x, y)
-            y += 5        
+            y += 5
         print(b)
 
 if __name__ == "__main__":
+    #displayAllRotations()
     #play_random_game()
     play_min_height_game()
 
