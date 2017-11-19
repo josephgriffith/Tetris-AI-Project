@@ -181,6 +181,16 @@ def play_min_height_game():
         print(b)
         time.sleep(.25)
 
+def displayAllRotations():
+    all_pieces = list(pieces())
+    for i in all_pieces:
+        b = board()
+        x, y = 0, 0
+        for rot in i.rotations():
+            b.place(rot, x, y)
+            y += 5        
+        print(b)
+
 if __name__ == "__main__":
     #play_random_game()
     play_min_height_game()
