@@ -38,38 +38,42 @@ def pieces():
 
     end = '\033[0m'
     bold = '\033[1m'
-    I = red + bold + '\u22A0' + end
+    
+    char = chr(164) 
+    I = red + bold + char + end
+    T = green + bold + char + end
+    L = yellow + bold + char + end
+    J = blue + bold + char + end
+    O = grey + bold + char + end
+    S = teal + bold + char + end
+    Z = purple + bold + char + end
 
-    #yield piece((("I",),
-    #             ("I",),
-    #             ("I",),
-    #             ("I",)), 2)
     yield piece(((I,),
                  (I,),
                  (I,),
                  (I,)), 2)
 
-    yield piece(((None, "T", None),
-                 ("T", "T", "T")), 4)
+    yield piece(((None, T, None),
+                 (T, T, T)), 4)
 
-    yield piece((("L", None),
-                 ("L", None),
-                 ("L", "L")), 4)
+    yield piece(((L, None),
+                 (L, None),
+                 (L, L)), 4)
 
-    yield piece(((None, "J"),
-                 (None, "J"),
-                 ("J", "J")), 4)
+    yield piece(((None, J),
+                 (None, J),
+                 (J, J)), 4)
 
-    yield piece((("O", "O"),
-                 ("O", "O")), 1)
+    yield piece(((O, O),
+                 (O, O)), 1)
 
-    yield piece((("S", None),
-                 ("S", "S"),
-                 (None, "S")), 2)
+    yield piece(((S, None),
+                 (S, S),
+                 (None, S)), 2)
 
-    yield piece(((None, "Z"),
-                 ("Z", "Z"),
-                 ("Z", None)), 2)
+    yield piece(((None, Z),
+                 (Z, Z),
+                 (Z, None)), 2)
 
 class board(object):
     def __init__(self, width=10, height=20):
