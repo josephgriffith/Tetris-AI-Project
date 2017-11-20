@@ -35,20 +35,28 @@ def pieces():
     grey = '\033[97m'
     black = '\033[98m'
     #black = '\033[99m'
+    inverted_red = '\033[41m'
+    inverted_green = '\033[42m'
+    inverted_yellow = '\033[43m'
+    inverted_blue = '\033[44m'
+    inverted_purple = '\033[45m'
+    inverted_teal = '\033[46m'
+    inverted_grey = '\033[47m'
 
     end = '\033[0m'
     bold = '\033[1m'
 
     #char = chr(35)          # octothorpe
-    char = chr(164)         # spiky circle
+    #char = chr(164)         # spiky circle
+    char = '[]'
     #char = chr(449)         # ||                   ERRORS in console
-    I = red + bold + char + end
-    T = green + bold + char + end
-    L = yellow + bold + char + end
-    J = blue + bold + char + end
-    O = grey + bold + char + end
-    S = teal + bold + char + end
-    Z = purple + bold + char + end
+    I = inverted_red + bold + char + end
+    T = inverted_green + bold + char + end
+    L = inverted_yellow + bold + char + end
+    J = inverted_blue + bold + char + end
+    O = inverted_grey + bold + char + end
+    S = inverted_teal + bold + char + end
+    Z = inverted_purple + bold + char + end
 
     # Note these are mirrored here since X is the first dimension and Y is the second.
     yield piece(((I,),
@@ -138,49 +146,18 @@ class board(object):
                     yield (rot, col, row)
 
     def __str__(self):
-        ret = "+" + "-" * self.width + "+" + "\n"
-        for y in range(self.height):
-            ret += "|"
-            for x in range(self.width):
-                c = self.board[x][y]
-                if c is None:
-                    ret += " "
-                else:
-                    ret += c
-            ret += "|\n"
-        ret += "+" + "-" * self.width + "+" + "\n"
-        return ret
-
-    #spaced print
-    #def __str__(self):
-    #   ret = "+" + "--" * (self.width-1) + "-+" + "\n"
-    #   for y in range(self.height):
-    #       ret += "|"
-    #       for x in range(self.width):
-    #           c = self.board[x][y]
-    #           if c is None:
-    #               ret += "  "
-    #           else:
-    #               ret += c + " "
-    #       ret += "\b|\n"
-    #   ret += "+" + "--" * (self.width-1) + "-+" + "\n"
-    #   return ret
-
-    #grid print
-    #def __str__(self):
-    #    under = '\033[4m'
-    #    end = '\033[0m'
-    #    ret = under + "  " * self.width + " " + "\n"
-    #    for y in range(self.height):
-    #        ret += under + "|"
-    #        for x in range(self.width):
-    #            c = self.board[x][y]
-    #            if c is None:
-    #                ret += under + " |"
-    #            else:
-    #                ret += under + c + under + "|"
-    #        ret += "\n"
-    #    return ret
+       ret = "+" + "--" * (self.width) + "+" + "\n"
+       for y in range(self.height):
+           ret += "|"
+           for x in range(self.width):
+               c = self.board[x][y]
+               if c is None:
+                   ret += "  "
+               else:
+                   ret += c#  + c # " "
+           ret += "|\n"
+       ret += "+" + "--" * (self.width) + "+" + "\n"
+       return ret
 
 def play_random_game():
     b = board()
