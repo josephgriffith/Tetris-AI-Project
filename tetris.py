@@ -1,5 +1,6 @@
 import time
 import random
+import numpy as np
 
 # Goal: the AI should play a long game.
 # We'll have a train function to train the neural net.
@@ -10,18 +11,38 @@ import random
 # The more we train, the higher the value for the initial state should be.
 # The inputs to the neural network are:
 #   10 column heights
-#   6 zeroes and 1 one to represent which piece we're placing
+#   7 inputs for which piece we're placing
 # The outputs from the neural network are:
-#   A column, 0-9 -- is this one output or 10?
-#   A piece rotation
+#   A column - 10 outputs
+#   A piece rotation - 4 outputs
 
 # What do we do if the AI tries to make an illegal move?
 
+# Much of this code is taken and/or adapted from http://nbviewer.jupyter.org/url/www.cs.colostate.edu/~anderson/cs440/notebooks/21%20Reinforcement%20Learning%20with%20a%20Neural%20Network%20as%20the%20Q%20Function.ipynb
+
+def epsilonGreedy(Qnet, board, piece, epsilon):
+    moves = board.valid_moves(piece)
+    if np.random.uniform() < epsilon: # random move
+        move = random.choice(moves)
+        if Qnet.Xmeans is None:
+            # Qnet is not initialized yet
+            Q = 0
+        else:
+            Q = Qnet.use(something)
+    else: # greedy move
+        qs = []
+        for m in moves:
+            qs.append(Qnet.use(something) if Qnet.Xmeans is not None else 0)
+        move = moves[np.argmax(qs)]
+        Q = np.max(qs)
+    return move, Q
+
 def play_ai_game():
     b = board()
+    all_pieces = list(pieces())
     while True:
         # Generate the next piece
-        piece = choose_random_piece()
+        piece = random.choice(all_pieces)
         (position, rotation) = ai_get_move(b, piece)
         b.drop(rotation, position)
         if b.is_game_over():
@@ -172,9 +193,11 @@ class board(object):
 
     def drop(self, rotated_piece, col):
         row = self.fits_row(rotated_piece, col)
+        # TODO: what if row is -1?
         self.place(rotated_piece, col, row)
 
     def is_game_over(self):
+        # TODO
         pass
 
     def valid_moves(self, piece):
