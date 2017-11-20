@@ -43,7 +43,7 @@ def play_ai_game():
     all_pieces = list(pieces())
     while True:
         # Generate the next piece
-        piece = random.choice(all_pieces) # TODO: piece selection should be in board
+        piece = b.next_piece
         (position, rotation) = ai_get_move(b, piece)
         b.drop(rotation, position)
         if b.is_game_over():
@@ -72,6 +72,7 @@ class rotated_piece(object):
 
     def __str__(self):
         return str(self.grid)
+
     def __repr__(self):
         return "rotated_piece(" + repr(self.grid) + ")"
 
@@ -162,6 +163,11 @@ class board(object):
         self.width = width
         self.height = height
         self.board = self.make_board()
+        self.all_pieces = list(pieces())
+        self.next_piece = self.choose_random_piece()
+
+    def choose_random_piece(self):
+        return random.choice(self.all_pieces)
 
     def make_board(self):
         return [[None] * self.height for i in range(self.width)]
@@ -181,6 +187,7 @@ class board(object):
                         return offset_y-1
 
     def place(self, rotated_piece, x, y):
+        # TODO: it probably shouldn't be possible to call this with a piece other than next_piece
         for piece_x in range(rotated_piece.width):
             for piece_y in range(rotated_piece.height):
                 c = rotated_piece.grid[piece_x][piece_y]
@@ -200,6 +207,9 @@ class board(object):
                     board2[x][board2_row] = self.board[x][y]
                 board2_row -= 1
         self.board = board2
+
+        # Choose next piece
+        self.next_piece = self.choose_random_piece()
 
     def drop(self, rotated_piece, col):
         row = self.fits_row(rotated_piece, col)
@@ -232,7 +242,7 @@ def play_random_game():
     b = board()
     all_pieces = list(pieces())
     while(True):
-        p = random.choice(all_pieces)
+        p = b.next_piece
         moves = list(b.valid_moves(p))
         if len(moves) == 0:
             break
@@ -245,7 +255,7 @@ def play_min_height_game():
     b = board()
     all_pieces = list(pieces())
     while(True):
-        p = random.choice(all_pieces)
+        p = b.next_piece
         moves = list(b.valid_moves(p))
         if len(moves) == 0:
             break
