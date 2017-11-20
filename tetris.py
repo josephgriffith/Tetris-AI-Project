@@ -21,11 +21,16 @@ def play_ai_game():
     b = board()
     while True:
         # Generate the next piece
-        piece = choose_random_piece
+        piece = choose_random_piece()
         (position, rotation) = ai_get_move(b, piece)
         b.drop(rotation, position)
         if b.is_game_over():
             return
+
+def train():
+    # Play a game, collecting samples
+    # Train the network a number of times with that game
+    pass
 
 class rotated_piece(object):
     def __init__(self, grid, display_str):
