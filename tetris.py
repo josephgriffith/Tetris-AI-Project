@@ -28,10 +28,11 @@ def play_ai_game():
             return
 
 class rotated_piece(object):
-    def __init__(self, grid):
+    def __init__(self, grid, display_str):
         self.grid = grid
         self.height = len(grid[0])
         self.width = len(grid)
+        self.display_str = display_str
 
     def __str__(self):
         return str(self.grid)
@@ -39,15 +40,16 @@ class rotated_piece(object):
         return "rotated_piece(" + repr(self.grid) + ")"
 
 class piece(object):
-    def __init__(self, grid, num_rotations):
+    def __init__(self, grid, num_rotations, display_str):
         self.grid = grid
         self.num_rotations = num_rotations
+        self.display_str = display_str
 
     def rotations(self):
         # Generator that returns all the rotations for this piece.
         rotated_grid = self.grid
         for i in range(self.num_rotations):
-            yield rotated_piece(rotated_grid)
+            yield rotated_piece(rotated_grid, self.display_str)
             rotated_grid = list(zip(*rotated_grid[::-1]))
 
 def pieces():
@@ -85,32 +87,32 @@ def pieces():
     Z = inverted_purple + bold + char + end
 
     # Note these are mirrored here since X is the first dimension and Y is the second.
-    yield piece(((I,),
-                 (I,),
-                 (I,),
-                 (I,)), 2)
+    yield piece(((1,),
+                 (1,),
+                 (1,),
+                 (1,)), 2, I)
 
-    yield piece(((None, T, None),
-                 (T, T, T)), 4)
+    yield piece(((0, 1, 0),
+                 (1, 1, 1)), 4, T)
 
-    yield piece(((J, None),
-                 (J, None),
-                 (J, J)), 4)
+    yield piece(((1, 0),
+                 (1, 0),
+                 (1, 1)), 4, J)
 
-    yield piece(((None, L),
-                 (None, L),
-                 (L, L)), 4)
+    yield piece(((0, 1),
+                 (0, 1),
+                 (1, 1)), 4, L)
 
-    yield piece(((O, O),
-                 (O, O)), 1)
+    yield piece(((1, 1),
+                 (1, 1)), 1, O)
 
-    yield piece(((Z, None),
-                 (Z, Z),
-                 (None, Z)), 2)
+    yield piece(((1, 0),
+                 (1, 1),
+                 (0, 1)), 2, Z)
 
-    yield piece(((None, S),
-                 (S, S),
-                 (S, None)), 2)
+    yield piece(((0, 1),
+                 (1, 1),
+                 (1, 0)), 2, S)
 
 class board(object):
     def __init__(self, width=10, height=20):
@@ -131,7 +133,7 @@ class board(object):
                     if piece_y + offset_y == self.height:
                         # Off the bottom of the board
                         return offset_y - 1;
-                    if self.board[piece_x + col][piece_y + offset_y] != None and rotated_piece.grid[piece_x][piece_y] != None:
+                    if self.board[piece_x + col][piece_y + offset_y] != None and rotated_piece.grid[piece_x][piece_y] != 0:
                         # Did not fit
                         return offset_y-1
 
@@ -139,8 +141,8 @@ class board(object):
         for piece_x in range(rotated_piece.width):
             for piece_y in range(rotated_piece.height):
                 c = rotated_piece.grid[piece_x][piece_y]
-                if c != None:
-                    self.board[piece_x + x][piece_y + y] = c
+                if c != 0:
+                    self.board[piece_x + x][piece_y + y] = rotated_piece.display_str
 
         # Clear completed lines
         board2 = self.make_board()
