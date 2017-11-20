@@ -1,6 +1,7 @@
 import time
 import random
 import numpy as np
+import neuralnetworks as nn
 
 # Goal: the AI should play a long game.
 # We'll have a train function to train the neural net.
@@ -42,23 +43,32 @@ def play_ai_game():
     all_pieces = list(pieces())
     while True:
         # Generate the next piece
-        piece = random.choice(all_pieces)
+        piece = random.choice(all_pieces) # TODO: piece selection should be in board
         (position, rotation) = ai_get_move(b, piece)
         b.drop(rotation, position)
         if b.is_game_over():
             return
 
-def train():
+def train(hiddenLayers):
+    Qnet = nn.NeuralNetwork(numInputs, hiddenLayers, numOutputs)
+    Qnet._standardizeT = lambda x: x # TODO: is this needed?
+    Qnet._standardizeX = lambda x: x
+
+    # TODO: do this all a number of times
+
     # Play a game, collecting samples
+    b = board()
+    while(not b.is_game_over()):
+        pass
     # Train the network a number of times with that game
     pass
 
 class rotated_piece(object):
-    def __init__(self, grid, display_str):
+    def __init__(self, grid, which_piece):
         self.grid = grid
         self.height = len(grid[0])
         self.width = len(grid)
-        self.display_str = display_str
+        self.which_piece = which_piece
 
     def __str__(self):
         return str(self.grid)
@@ -66,16 +76,16 @@ class rotated_piece(object):
         return "rotated_piece(" + repr(self.grid) + ")"
 
 class piece(object):
-    def __init__(self, grid, num_rotations, display_str):
+    def __init__(self, grid, num_rotations, which_piece):
         self.grid = grid
         self.num_rotations = num_rotations
-        self.display_str = display_str
+        self.which_piece = which_piece
 
     def rotations(self):
         # Generator that returns all the rotations for this piece.
         rotated_grid = self.grid
         for i in range(self.num_rotations):
-            yield rotated_piece(rotated_grid, self.display_str)
+            yield rotated_piece(rotated_grid, self.which_piece)
             rotated_grid = list(zip(*rotated_grid[::-1]))
 
 class Color(object):
@@ -175,7 +185,7 @@ class board(object):
             for piece_y in range(rotated_piece.height):
                 c = rotated_piece.grid[piece_x][piece_y]
                 if c != 0:
-                    self.board[piece_x + x][piece_y + y] = rotated_piece.display_str
+                    self.board[piece_x + x][piece_y + y] = rotated_piece.which_piece
 
         # Clear completed lines
         board2 = self.make_board()
