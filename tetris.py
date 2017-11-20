@@ -52,8 +52,8 @@ class piece(object):
             yield rotated_piece(rotated_grid, self.display_str)
             rotated_grid = list(zip(*rotated_grid[::-1]))
 
-
-def colorize(char):
+class Color(object):
+    """ Enum to keep track of console color codes. """
     red = '\033[91m'
     green = '\033[92m'
     yellow = '\033[93m'
@@ -74,20 +74,21 @@ def colorize(char):
     end = '\033[0m'
     bold = '\033[1m'
 
+def colorize(char):
     if char == None:
         return '  '
 
     colors = {
-            'I': inverted_red,
-            'T': inverted_green,
-            'L': inverted_yellow,
-            'J': inverted_blue,
-            'O': inverted_grey,
-            'S': inverted_teal,
-            'Z': inverted_purple
+            'I': Color.inverted_red,
+            'T': Color.inverted_green,
+            'L': Color.inverted_yellow,
+            'J': Color.inverted_blue,
+            'O': Color.inverted_grey,
+            'S': Color.inverted_teal,
+            'Z': Color.inverted_purple
             }
 
-    return colors[char] + bold + '_|' + end
+    return colors[char] + Color.bold + '_|' + Color.end
 
 
 def pieces():
