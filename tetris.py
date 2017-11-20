@@ -52,8 +52,8 @@ class piece(object):
             yield rotated_piece(rotated_grid, self.display_str)
             rotated_grid = list(zip(*rotated_grid[::-1]))
 
-def pieces():
-    # generator that returns all the non-rotated pieces
+
+def colorize(char):
     red = '\033[91m'
     green = '\033[92m'
     yellow = '\033[93m'
@@ -74,45 +74,51 @@ def pieces():
     end = '\033[0m'
     bold = '\033[1m'
 
-    #char = chr(35)          # octothorpe
-    #char = chr(164)         # spiky circle
-    char = '_|'
-    #char = chr(449)         # ||                   ERRORS in console
-    I = inverted_red + bold + char + end
-    T = inverted_green + bold + char + end
-    L = inverted_yellow + bold + char + end
-    J = inverted_blue + bold + char + end
-    O = inverted_grey + bold + char + end
-    S = inverted_teal + bold + char + end
-    Z = inverted_purple + bold + char + end
+    if char == None:
+        return '  '
 
+    colors = {
+            'I': inverted_red,
+            'T': inverted_green,
+            'L': inverted_yellow,
+            'J': inverted_blue,
+            'O': inverted_grey,
+            'S': inverted_teal,
+            'Z': inverted_purple
+            }
+
+    return colors[char] + bold + '_|' + end
+
+
+def pieces():
+    # generator that returns all the non-rotated pieces
     # Note these are mirrored here since X is the first dimension and Y is the second.
     yield piece(((1,),
                  (1,),
                  (1,),
-                 (1,)), 2, I)
+                 (1,)), 2, "I")
 
     yield piece(((0, 1, 0),
-                 (1, 1, 1)), 4, T)
+                 (1, 1, 1)), 4, "T")
 
     yield piece(((1, 0),
                  (1, 0),
-                 (1, 1)), 4, J)
+                 (1, 1)), 4, "J")
 
     yield piece(((0, 1),
                  (0, 1),
-                 (1, 1)), 4, L)
+                 (1, 1)), 4, "L")
 
     yield piece(((1, 1),
-                 (1, 1)), 1, O)
+                 (1, 1)), 1, "O")
 
     yield piece(((1, 0),
                  (1, 1),
-                 (0, 1)), 2, Z)
+                 (0, 1)), 2, "Z")
 
     yield piece(((0, 1),
                  (1, 1),
-                 (1, 0)), 2, S)
+                 (1, 0)), 2, "S")
 
 class board(object):
     def __init__(self, width=10, height=20):
@@ -178,11 +184,7 @@ class board(object):
        for y in range(self.height):
            ret += "|"
            for x in range(self.width):
-               c = self.board[x][y]
-               if c is None:
-                   ret += "  "
-               else:
-                   ret += c#  + c # " "
+               ret += colorize(self.board[x][y])
            ret += "|\n"
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
