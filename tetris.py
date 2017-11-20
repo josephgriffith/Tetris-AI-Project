@@ -21,8 +21,8 @@ import neuralnetworks as nn
 
 # Much of this code is taken and/or adapted from http://nbviewer.jupyter.org/url/www.cs.colostate.edu/~anderson/cs440/notebooks/21%20Reinforcement%20Learning%20with%20a%20Neural%20Network%20as%20the%20Q%20Function.ipynb
 
-def epsilonGreedy(Qnet, board, piece, epsilon):
-    moves = board.valid_moves(piece)
+def epsilonGreedy(Qnet, board, epsilon):
+    moves = board.valid_moves
     if np.random.uniform() < epsilon: # random move
         move = random.choice(moves)
         if Qnet.Xmeans is None:
@@ -40,11 +40,9 @@ def epsilonGreedy(Qnet, board, piece, epsilon):
 
 def play_ai_game():
     b = board()
-    all_pieces = list(pieces())
     while True:
         # Generate the next piece
-        piece = b.next_piece
-        (position, rotation) = ai_get_move(b, piece)
+        (position, rotation) = ai_get_move(b)
         b.drop(rotation, position)
         if b.is_game_over():
             return
@@ -58,12 +56,13 @@ def train(hiddenLayers):
 
     # Play a game, collecting samples
     b = board()
-    while(not b.is_game_over()):
+    while(not b.game_over):
         pass
     # Train the network a number of times with that game
     pass
 
 class rotated_piece(object):
+    # TODO: should this class represent just a rotation, not a rotated piece?
     def __init__(self, grid, which_piece):
         self.grid = grid
         self.height = len(grid[0])
@@ -165,6 +164,8 @@ class board(object):
         self.board = self.make_board()
         self.all_pieces = list(pieces())
         self.next_piece = self.choose_random_piece()
+        self.valid_moves = list(self.find_valid_moves())
+        self.game_over = False
 
     def choose_random_piece(self):
         return random.choice(self.all_pieces)
@@ -210,19 +211,20 @@ class board(object):
 
         # Choose next piece
         self.next_piece = self.choose_random_piece()
+        self.valid_moves = list(self.find_valid_moves())
+        if len(self.valid_moves) == 0:
+            self.game_over = True
 
     def drop(self, rotated_piece, col):
         row = self.fits_row(rotated_piece, col)
-        # TODO: what if row is -1?
-        self.place(rotated_piece, col, row)
+        if row == -1: # Invalid move requested
+            self.game_over = True
+        else:
+            self.place(rotated_piece, col, row)
 
-    def is_game_over(self):
-        # TODO
-        pass
-
-    def valid_moves(self, piece):
-        # generator that returns all the valid moves for the given piece
-        for rot in piece.rotations():
+    def find_valid_moves(self):
+        # generator that returns all the valid moves for the current state
+        for rot in self.next_piece.rotations():
             for col in range(self.width):
                 row = self.fits_row(rot, col)
                 if row >= 0:
@@ -240,28 +242,22 @@ class board(object):
 
 def play_random_game():
     b = board()
-    all_pieces = list(pieces())
     while(True):
-        p = b.next_piece
-        moves = list(b.valid_moves(p))
-        if len(moves) == 0:
+        if b.game_over:
             break
-        (r, x, y) = random.choice(moves)
+        (r, x, y) = random.choice(b.valid_moves)
         b.place(r, x, y)
         print(b)
         time.sleep(.25)
 
 def play_min_height_game():
     b = board()
-    all_pieces = list(pieces())
     while(True):
-        p = b.next_piece
-        moves = list(b.valid_moves(p))
-        if len(moves) == 0:
+        if b.game_over:
             break
         max_move = None
         max_y = -1
-        for move in moves:
+        for move in b.valid_moves:
             y = move[2]
             if y > max_y:
                 max_move = move
