@@ -1,6 +1,32 @@
 import time
 import random
 
+# Goal: the AI should play a long game.
+# We'll have a train function to train the neural net.
+# The train function will play games of tetris and observe the outcome.
+# States which are closer to losing should have lower scores.
+# So, let's define a lost game to have value 0.  Then the state before a lost game has value 1, etc.
+# Then our use() function should choose the highest-value move.
+# The more we train, the higher the value for the initial state should be.
+# The inputs to the neural network are:
+#   10 column heights
+#   6 zeroes and 1 one to represent which piece we're placing
+# The outputs from the neural network are:
+#   A column, 0-9 -- is this one output or 10?
+#   A piece rotation
+
+# What do we do if the AI tries to make an illegal move?
+
+def play_ai_game():
+    b = board()
+    while True:
+        # Generate the next piece
+        piece = choose_random_piece
+        (position, rotation) = ai_get_move(b, piece)
+        b.drop(rotation, position)
+        if b.is_game_over():
+            return
+
 class rotated_piece(object):
     def __init__(self, grid):
         self.grid = grid
