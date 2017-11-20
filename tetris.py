@@ -151,7 +151,7 @@ class board(object):
         ret += "+" + "-" * self.width + "+" + "\n"
         return ret
 
-    #spaced print 
+    #spaced print
     #def __str__(self):
     #   ret = "+" + "--" * (self.width-1) + "-+" + "\n"
     #   for y in range(self.height):
@@ -165,7 +165,7 @@ class board(object):
     #       ret += "\b|\n"
     #   ret += "+" + "--" * (self.width-1) + "-+" + "\n"
     #   return ret
-  
+
     #grid print
     #def __str__(self):
     #    under = '\033[4m'
