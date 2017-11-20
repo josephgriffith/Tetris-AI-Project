@@ -48,7 +48,7 @@ def pieces():
 
     #char = chr(35)          # octothorpe
     #char = chr(164)         # spiky circle
-    char = '[]'
+    char = '_|'
     #char = chr(449)         # ||                   ERRORS in console
     I = inverted_red + bold + char + end
     T = inverted_green + bold + char + end
