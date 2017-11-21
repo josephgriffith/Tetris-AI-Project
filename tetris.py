@@ -88,6 +88,7 @@ class Color(object):
     inverted_purple = '\033[45m'
     inverted_teal = '\033[46m'
     inverted_grey = '\033[47m'
+    inverted_almostwhite = '\033[100m'
 
     end = '\033[0m'
     bold = '\033[1m'
@@ -103,10 +104,12 @@ def colorize(char):
             'J': Color.inverted_blue,
             'O': Color.inverted_grey,
             'S': Color.inverted_teal,
-            'Z': Color.inverted_purple
+            'Z': Color.inverted_purple,
+            ' ': Color.inverted_almostwhite
             }
 
-    return colors[char] + Color.bold + '_|' + Color.end
+    texture = '  ' if char == ' ' else '_|'
+    return colors[char] + Color.bold + texture + Color.end
 
 
 def pieces():
@@ -237,27 +240,23 @@ class Board(object):
            ret += "|"
            for x in range(self.width):
                #print('cleared', self.cleared, ', y: ', y)
-               #TODO: clean up into inline if
-               if self.cleared and y == self.cleared[0]:
-                   #print('y: ', y, end=' ')
-                   ret += "  "
-               else:
-                   #print('not cleared')
-                   ret += colorize(self.board[x][y])
+               ret += colorize(' ') if self.cleared and y == self.cleared[0] else colorize(self.board[x][y])
            if self.cleared and y == self.cleared[0]:
                self.cleared.pop(0)
-           ret += "|\n" if y > 3 else "|\t\t" + colorize(self.upcoming[0][y]) + colorize(self.upcoming[1][y]) + colorize(self.upcoming[2][y]) + colorize(self.upcoming[3][y]) + "\n"
+           ret += "|\n" if y > 3 or clear else "|\t\t" + colorize(self.upcoming[0][y]) + colorize(self.upcoming[1][y]) + colorize(self.upcoming[2][y]) + colorize(self.upcoming[3][y]) + "\n"
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
 
     def __str__(self):
        self.cleared.reverse()
+       ret = ''
        for i in self.cleared:
            #TODO: check that multiple clear lines works! -- probably need a way to manually pick moves first
-           print('cleared line: ', self.cleared)
+           #print('cleared line: ', self.cleared)
            #print(self.thing(True))         #nope
-           return self.thing(True)
-       return self.thing()
+           ret += self.thing(True)
+       ret += self.thing()
+       return ret
 
 def play_random_game():
     b = Board()
@@ -271,6 +270,7 @@ def play_random_game():
 
 def play_min_height_game():
     b = Board()
+    print(b)
     while(True):
         if b.game_over:
             break
