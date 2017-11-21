@@ -39,7 +39,7 @@ def epsilonGreedy(Qnet, board, epsilon):
     return move, Q
 
 def play_ai_game():
-    b = board()
+    b = Board()
     while True:
         # Generate the next piece
         (position, rotation) = ai_get_move(b)
@@ -55,13 +55,13 @@ def train(hiddenLayers):
     # TODO: do this all a number of times
 
     # Play a game, collecting samples
-    b = board()
+    b = Board()
     while(not b.game_over):
         pass
     # Train the network a number of times with that game
     pass
 
-class piece(object):
+class Piece(object):
     def __init__(self, grid, num_rotations, which_piece):
         self.grid = grid
         self.num_rotations = num_rotations
@@ -120,34 +120,34 @@ def colorize(char):
 def pieces():
     # generator that returns all the non-rotated pieces
     # Note these are mirrored here since X is the first dimension and Y is the second.
-    yield piece(((1,),
+    yield Piece(((1,),
                  (1,),
                  (1,),
                  (1,)), 2, "I")
 
-    yield piece(((0, 1, 0),
+    yield Piece(((0, 1, 0),
                  (1, 1, 1)), 4, "T")
 
-    yield piece(((1, 0),
+    yield Piece(((1, 0),
                  (1, 0),
                  (1, 1)), 4, "J")
 
-    yield piece(((0, 1),
+    yield Piece(((0, 1),
                  (0, 1),
                  (1, 1)), 4, "L")
 
-    yield piece(((1, 1),
+    yield Piece(((1, 1),
                  (1, 1)), 1, "O")
 
-    yield piece(((1, 0),
+    yield Piece(((1, 0),
                  (1, 1),
                  (0, 1)), 2, "Z")
 
-    yield piece(((0, 1),
+    yield Piece(((0, 1),
                  (1, 1),
                  (1, 0)), 2, "S")
 
-class board(object):
+class Board(object):
     def __init__(self, width=10, height=20):
         self.width = width
         self.height = height
@@ -234,7 +234,7 @@ class board(object):
        return ret
 
 def play_random_game():
-    b = board()
+    b = Board()
     while(True):
         if b.game_over:
             break
@@ -244,7 +244,7 @@ def play_random_game():
         time.sleep(.25)
 
 def play_min_height_game():
-    b = board()
+    b = Board()
     while(True):
         if b.game_over:
             break
@@ -263,7 +263,7 @@ def play_min_height_game():
 def displayAllRotations():
     all_pieces = list(pieces())
     for i in all_pieces:
-        b = board()
+        b = Board()
         x, y = 0, 0
         for rot in range(i.num_rotations):
             b.next_piece = i
