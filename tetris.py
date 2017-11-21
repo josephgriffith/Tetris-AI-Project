@@ -61,32 +61,43 @@ def train(hiddenLayers):
     # Train the network a number of times with that game
     pass
 
-class rotated_piece(object):
-    # TODO: should this class represent just a rotation, not a rotated piece?
-    def __init__(self, grid, which_piece):
-        self.grid = grid
-        self.height = len(grid[0])
-        self.width = len(grid)
-        self.which_piece = which_piece
-
-    def __str__(self):
-        return str(self.grid)
-
-    def __repr__(self):
-        return "rotated_piece(" + repr(self.grid) + ")"
-
 class piece(object):
     def __init__(self, grid, num_rotations, which_piece):
         self.grid = grid
         self.num_rotations = num_rotations
         self.which_piece = which_piece
+        self.height = len(grid[0])
+        self.width = len(grid)
+
+    def get_dimensions(self, rotation):
+        if rotation % 2 == 0:
+            return (self.width, self.height)
+        else:
+            return (self.height, self.width)
 
     def rotations(self):
-        # Generator that returns all the rotations for this piece.
-        rotated_grid = self.grid
         for i in range(self.num_rotations):
-            yield rotated_piece(rotated_grid, self.which_piece)
+            yield i
+
+    def get_rotated_grid(self, rotation):
+        if rotation == 0:
+            return self.grid
+
+        if rotation == 1:
+            # TODO: numpy.rot90
+            # From https://stackoverflow.com/questions/8421337/rotating-a-two-dimensional-array-in-python
+            return list(zip(*self.grid[::-1]))
+
+        if rotation == 2:
+            # TODO: doing this seems slow, numpy.flip?
+            rotated_grid = list(zip(*self.grid[::-1]))
+            return list(zip(*rotated_grid[::-1]))
+
+        if rotation == 3:
+            # TODO: doing this seems slow, numpy.rot90
+            rotated_grid = list(zip(*self.grid[::-1]))
             rotated_grid = list(zip(*rotated_grid[::-1]))
+            return list(zip(*rotated_grid[::-1]))
 
 class Color(object):
     """ Enum to keep track of console color codes. """
@@ -173,27 +184,30 @@ class board(object):
     def make_board(self):
         return [[None] * self.height for i in range(self.width)]
 
-    def fits_row(self, rotated_piece, col):
+    def fits_row(self, rotation, col):
         # Returns the one and only one row that the piece must be placed at in this column.
-        if rotated_piece.width + col > self.width:
+        (width, height) = self.next_piece.get_dimensions(rotation)
+        if width + col > self.width:
             return -1
         for offset_y in range(self.height + 1):
-            for piece_x in range(rotated_piece.width):
-                for piece_y in range(rotated_piece.height):
+            for piece_x in range(width):
+                for piece_y in range(height):
                     if piece_y + offset_y == self.height:
                         # Off the bottom of the board
                         return offset_y - 1;
-                    if self.board[piece_x + col][piece_y + offset_y] != None and rotated_piece.grid[piece_x][piece_y] != 0:
+                    grid = self.next_piece.get_rotated_grid(rotation)
+                    if self.board[piece_x + col][piece_y + offset_y] != None and grid[piece_x][piece_y] != 0:
                         # Did not fit
                         return offset_y-1
 
-    def place(self, rotated_piece, x, y):
-        # TODO: it probably shouldn't be possible to call this with a piece other than next_piece
-        for piece_x in range(rotated_piece.width):
-            for piece_y in range(rotated_piece.height):
-                c = rotated_piece.grid[piece_x][piece_y]
+    def place(self, rotation, x, y):
+        (width, height) = self.next_piece.get_dimensions(rotation)
+        for piece_x in range(width):
+            for piece_y in range(height):
+                grid = self.next_piece.get_rotated_grid(rotation)
+                c = grid[piece_x][piece_y]
                 if c != 0:
-                    self.board[piece_x + x][piece_y + y] = rotated_piece.which_piece
+                    self.board[piece_x + x][piece_y + y] = self.next_piece.which_piece
 
         # Clear completed lines
         board2 = self.make_board()
@@ -215,12 +229,12 @@ class board(object):
         if len(self.valid_moves) == 0:
             self.game_over = True
 
-    def drop(self, rotated_piece, col):
-        row = self.fits_row(rotated_piece, col)
+    def drop(self, rotation, col):
+        row = self.fits_row(rotation, col)
         if row == -1: # Invalid move requested
             self.game_over = True
         else:
-            self.place(rotated_piece, col, row)
+            self.place(rotation, col, row)
 
     def find_valid_moves(self):
         # generator that returns all the valid moves for the current state
@@ -273,6 +287,7 @@ def displayAllRotations():
         b = board()
         x, y = 0, 0
         for rot in i.rotations():
+            b.next_piece = i
             b.place(rot, x, y)
             y += 5
         print(b)
