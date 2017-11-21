@@ -2,6 +2,7 @@ import time
 import random
 import numpy as np
 import neuralnetworks as nn
+from copy import deepcopy
 
 # Goal: the AI should play a long game.
 # We'll have a train function to train the neural net.
@@ -80,14 +81,14 @@ class Piece(object):
 
 class Color(object):
     """ Enum to keep track of console color codes. """
-    red = '\033[91m'
-    green = '\033[92m'
-    yellow = '\033[93m'
-    blue = '\033[94m'
-    purple = '\033[95m'
-    teal = '\033[96m'
-    grey = '\033[97m'
-    black = '\033[98m'
+    #red = '\033[91m'
+    #green = '\033[92m'
+    #yellow = '\033[93m'
+    #blue = '\033[94m'
+    #purple = '\033[95m'
+    #teal = '\033[96m'
+    #grey = '\033[97m'
+    #black = '\033[98m'
     #black = '\033[99m'
     inverted_red = '\033[41m'
     inverted_green = '\033[42m'
@@ -156,6 +157,7 @@ class Board(object):
         self.next_piece = self.choose_random_piece()
         self.valid_moves = list(self.find_valid_moves())
         self.game_over = False
+        self.cleared = []
 
     def choose_random_piece(self):
         return random.choice(self.all_pieces)
@@ -189,6 +191,7 @@ class Board(object):
                     self.board[piece_x + x][piece_y + y] = self.next_piece.which_piece
 
         # Clear completed lines
+        self.cleared = []
         board2 = self.make_board()
         board2_row = self.height - 1
         for y in range(self.height - 1, -1, -1):
@@ -197,9 +200,13 @@ class Board(object):
                 if self.board[x][y] != None:
                     s += 1
             if s != self.width:
+                #print('keep line y: ', y)
                 for x in range(self.width):
                     board2[x][board2_row] = self.board[x][y]
                 board2_row -= 1
+            else:
+                self.cleared.append(y)
+                #print('remove line: ', y, ', cleared line: ', self.cleared)
         self.board = board2
 
         # Choose next piece
@@ -222,16 +229,39 @@ class Board(object):
                 row = self.fits_row(rot, col)
                 if row >= 0:
                     yield (rot, col, row)
+    
+    def next(self):
+        #TODO: printing mem location, not piece
+        yield self.next_piece
 
-    def __str__(self):
-       ret = "+" + "--" * (self.width) + "+" + "\n"
+    #TODO: seems to be removing the intended line, and the line above it -_- (y-1)
+    #TODO: end state may not be displaying the final board? (there was a final board displayed with two blank rows at the top
+    def thing(self, clear=False):
+       ret = "+" + "--" * (self.width) + "+\n"
        for y in range(self.height):
            ret += "|"
            for x in range(self.width):
-               ret += colorize(self.board[x][y])
-           ret += "|\n"
+               #print('cleared', self.cleared, ', y: ', y)
+               if self.cleared and y == self.cleared[0]:
+                   #print('y: ', y, end=' ')
+                   ret += "  "
+               else:
+                   #print('not cleared')
+                   ret += colorize(self.board[x][y])
+           if self.cleared and y == self.cleared[0]:
+               self.cleared.pop(0)
+           ret += "|\n" if y > 3 else "|\t" + str(list(self.next())) + "\n"     #see next()
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
+
+    def __str__(self):
+       self.cleared.reverse()
+       for i in self.cleared:
+           #TODO: check that multiple clear lines works! -- probably need a way to manually pick moves first
+           print('cleared line: ', self.cleared)
+           #print(self.thing(True))         #nope
+           return self.thing(True)
+       return self.thing()
 
 def play_random_game():
     b = Board()
