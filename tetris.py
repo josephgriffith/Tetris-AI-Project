@@ -81,15 +81,6 @@ class Piece(object):
 
 class Color(object):
     """ Enum to keep track of console color codes. """
-    #red = '\033[91m'
-    #green = '\033[92m'
-    #yellow = '\033[93m'
-    #blue = '\033[94m'
-    #purple = '\033[95m'
-    #teal = '\033[96m'
-    #grey = '\033[97m'
-    #black = '\033[98m'
-    #black = '\033[99m'
     inverted_red = '\033[41m'
     inverted_green = '\033[42m'
     inverted_yellow = '\033[43m'
@@ -153,6 +144,7 @@ class Board(object):
         self.width = width
         self.height = height
         self.board = self.make_board()
+        self.upcoming = [[None]*4 for i in range(4)]
         self.all_pieces = list(pieces())
         self.next_piece = self.choose_random_piece()
         self.valid_moves = list(self.find_valid_moves())
@@ -181,14 +173,18 @@ class Board(object):
                         # Did not fit
                         return offset_y-1
 
-    def place(self, rotation, x, y):
+    def paintPiece(self, canvas, rotation=0, x=0, y=0):
         (width, height) = self.next_piece.get_dimensions(rotation)
         grid = self.next_piece.get_rotated_grid(rotation)
         for piece_x in range(width):
             for piece_y in range(height):
                 c = grid[piece_x][piece_y]
                 if c != 0:
-                    self.board[piece_x + x][piece_y + y] = self.next_piece.which_piece
+                    canvas[piece_x + x][piece_y + y] = self.next_piece.which_piece
+
+    def place(self, rotation, x, y):
+        self.paintPiece(self.board, rotation, x, y)
+        self.upcoming = [[None]*4 for i in range(4)]
 
         # Clear completed lines
         self.cleared = []
@@ -214,6 +210,9 @@ class Board(object):
         self.valid_moves = list(self.find_valid_moves())
         if len(self.valid_moves) == 0:
             self.game_over = True
+        else:
+            self.paintPiece(self.upcoming)
+
 
     def drop(self, rotation, col):
         row = self.fits_row(rotation, col)
@@ -230,10 +229,6 @@ class Board(object):
                 if row >= 0:
                     yield (rot, col, row)
     
-    def next(self):
-        #TODO: printing mem location, not piece 
-        yield self.next_piece
-
     #TODO: seems to be removing the intended line, and the line above it -_- (y-1)
     #TODO: end state may not be displaying the final board? (there was a final board displayed with two blank rows at the top
     def thing(self, clear=False):
@@ -242,6 +237,7 @@ class Board(object):
            ret += "|"
            for x in range(self.width):
                #print('cleared', self.cleared, ', y: ', y)
+               #TODO: clean up into inline if
                if self.cleared and y == self.cleared[0]:
                    #print('y: ', y, end=' ')
                    ret += "  "
@@ -250,7 +246,7 @@ class Board(object):
                    ret += colorize(self.board[x][y])
            if self.cleared and y == self.cleared[0]:
                self.cleared.pop(0)
-           ret += "|\n" if y > 3 else "|\t" + str(list(self.next())) + "\n"     #see next()
+           ret += "|\n" if y > 3 else "|\t\t" + colorize(self.upcoming[0][y]) + colorize(self.upcoming[1][y]) + colorize(self.upcoming[2][y]) + colorize(self.upcoming[3][y]) + "\n"
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
 
