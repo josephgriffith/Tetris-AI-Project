@@ -232,7 +232,7 @@ class Board(object):
                 if row >= 0:
                     yield (rot, col, row)
     
-    #TODO: seems to be removing the intended line, and the line above it -_- (y-1)
+    #TODO: seems to be removing the intended line, and the line above it -_- (y-1) for the line removal print
     #TODO: end state may not be displaying the final board? (there was a final board displayed with two blank rows at the top
     def thing(self, clear=False):
        ret = "+" + "--" * (self.width) + "+\n"
@@ -244,6 +244,8 @@ class Board(object):
            if self.cleared and y == self.cleared[0]:
                self.cleared.pop(0)
            ret += "|\n" if y > 3 or clear else "|\t\t" + colorize(self.upcoming[0][y]) + colorize(self.upcoming[1][y]) + colorize(self.upcoming[2][y]) + colorize(self.upcoming[3][y]) + "\n"
+           #moved down 2 lines... eh
+           #ret += "|\n" if (y < 2) or (y > 5) or clear else "|\t\t" + colorize(self.upcoming[0][y-2]) + colorize(self.upcoming[1][y-2]) + colorize(self.upcoming[2][y-2]) + colorize(self.upcoming[3][y-2]) + "\n"
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
 
@@ -254,7 +256,7 @@ class Board(object):
            #TODO: check that multiple clear lines works! -- probably need a way to manually pick moves first
            #print('cleared line: ', self.cleared)
            #print(self.thing(True))         #nope
-           ret += self.thing(True)
+           ret += self.thing(True) + '\n'
        ret += self.thing()
        return ret
 
