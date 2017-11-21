@@ -231,7 +231,7 @@ class Board(object):
                     yield (rot, col, row)
     
     def next(self):
-        #TODO: printing mem location, not piece
+        #TODO: printing mem location, not piece 
         yield self.next_piece
 
     #TODO: seems to be removing the intended line, and the line above it -_- (y-1)
