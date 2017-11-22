@@ -152,7 +152,8 @@ class Board(object):
         self.next_piece = self.choose_random_piece()
         self.valid_moves = list(self.find_valid_moves())
         self.game_over = False
-        self.cleared = []
+        self.cleared = [0]*height
+        self.paintPiece(self.upcoming)
 
     def choose_random_piece(self):
         return random.choice(self.all_pieces)
@@ -190,7 +191,7 @@ class Board(object):
         self.upcoming = [[None]*4 for i in range(4)]
 
         # Clear completed lines
-        self.cleared = []
+        self.cleared = [0]*self.height
         board2 = self.make_board()
         board2_row = self.height - 1
         for y in range(self.height - 1, -1, -1):
@@ -204,7 +205,7 @@ class Board(object):
                     board2[x][board2_row] = self.board[x][y]
                 board2_row -= 1
             else:
-                self.cleared.append(y)
+                self.cleared[y] = 1
                 #print('remove line: ', y, ', cleared line: ', self.cleared)
         self.board = board2
 
@@ -236,13 +237,14 @@ class Board(object):
     #TODO: end state may not be displaying the final board? (there was a final board displayed with two blank rows at the top
     def thing(self, clear=False):
        ret = "+" + "--" * (self.width) + "+\n"
+       #print('cleared: ', self.cleared)
        for y in range(self.height):
            ret += "|"
            for x in range(self.width):
-               #print('cleared', self.cleared, ', y: ', y)
-               ret += colorize(' ') if self.cleared and y == self.cleared[0] else colorize(self.board[x][y])
-           if self.cleared and y == self.cleared[0]:
-               self.cleared.pop(0)
+               ret += colorize(' ') if clear and self.cleared[y] == 1 else colorize(self.board[x][y])
+           #if self.cleared[y] == 1:
+           #    #print('cleared', self.cleared, ', y: ', y)
+           #    self.cleared.pop(0)
            ret += "|\n" if y > 3 or clear else "|\t\t" + colorize(self.upcoming[0][y]) + colorize(self.upcoming[1][y]) + colorize(self.upcoming[2][y]) + colorize(self.upcoming[3][y]) + "\n"
            #moved down 2 lines... eh
            #ret += "|\n" if (y < 2) or (y > 5) or clear else "|\t\t" + colorize(self.upcoming[0][y-2]) + colorize(self.upcoming[1][y-2]) + colorize(self.upcoming[2][y-2]) + colorize(self.upcoming[3][y-2]) + "\n"
@@ -250,12 +252,9 @@ class Board(object):
        return ret
 
     def __str__(self):
-       self.cleared.reverse()
        ret = ''
-       for i in self.cleared:
+       if self.cleared.count(1) > 0:
            #TODO: check that multiple clear lines works! -- probably need a way to manually pick moves first
-           #print('cleared line: ', self.cleared)
-           #print(self.thing(True))         #nope
            ret += self.thing(True) + '\n'
        ret += self.thing()
        return ret
