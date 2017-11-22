@@ -45,6 +45,7 @@ def play_ai_game():
         # Generate the next piece
         (position, rotation) = ai_get_move(b)
         b.drop(rotation, position)
+        b.advance_game_state()
         if b.is_game_over():
             return
 
@@ -149,9 +150,9 @@ class Board(object):
         self.board = self.make_board()
         self.upcoming = [[None]*4 for i in range(4)]
         self.all_pieces = list(pieces())
-        self.set_next_piece_and_valid_moves_and_check_for_game_over()
-        self.game_over = False
         self.cleared = [0]*height
+        self.game_over = False
+        self.advance_game_state()
         self.paintPiece(self.upcoming)
 
     def choose_random_piece(self):
@@ -187,16 +188,32 @@ class Board(object):
 
     def place(self, rotation, x, y):
         self.paintPiece(self.board, rotation, x, y)
-
+        # We can set the 'cleared' variable even before the game state is advanced.
         self.cleared = self.find_completed_lines()
+
+    def advance_game_state(self):
         self.clear_completed_lines_in_board()
 
         # Choose next piece
-        self.set_next_piece_and_valid_moves_and_check_for_game_over()
+        self.next_piece = self.choose_random_piece()
+
+        # Find all valid moves
+        self.valid_moves = []
+        for rot in range(self.next_piece.num_rotations):
+            for col in range(self.width):
+                row = self.fits_row(rot, col)
+                if row >= 0:
+                    self.valid_moves.append((rot, col, row))
+
+        # Check for game over
+        if len(self.valid_moves) == 0:
+            self.game_over = True
+            return
 
         # Clear upcoming (after game over so we don't render the upcoming piece if the game is over)
-        self.upcoming = [[None]*4 for i in range(4)]
-        self.paintPiece(self.upcoming)
+        if not self.game_over:
+            self.upcoming = [[None]*4 for i in range(4)]
+            self.paintPiece(self.upcoming)
 
     def find_completed_lines(self):
         # Detect completed lines
@@ -213,12 +230,12 @@ class Board(object):
     def clear_completed_lines_in_board(self):
         new_row = self.height - 1
         for y in range(self.height - 1, -1, -1):
+            if new_row != y:
+                for x in range(self.width):
+                    self.board[x][new_row] = self.board[x][y]
             if self.cleared[y] == 0: # If we didn't clear a line
-                if new_row != y:
-                    for x in range(self.width):
-                        self.board[x][new_row] = self.board[x][y]
                 new_row -= 1
-
+        self.cleared = [0]*self.height
 
     def drop(self, rotation, col):
         row = self.fits_row(rotation, col)
@@ -227,28 +244,8 @@ class Board(object):
         else:
             self.place(rotation, col, row)
 
-    def set_next_piece_and_valid_moves_and_check_for_game_over(self):
-        """Put all valid moves in self.valid_moves"""
-
-        self.next_piece = self.choose_random_piece()
-
-        self.valid_moves = []
-        for rot in range(self.next_piece.num_rotations):
-            for col in range(self.width):
-                row = self.fits_row(rot, col)
-                if row >= 0:
-                    self.valid_moves.append((rot, col, row))
-
-        # Check for game over
-        if len(self.valid_moves) == 0:
-            self.game_over = True
-            return
-
-    #TODO: seems to be removing the intended line, and the line above it -_- (y-1) for the line removal print
-    #TODO: end state may not be displaying the final board? (there was a final board displayed with two blank rows at the top
     def thing(self, clear=False):
        ret = "+" + "--" * (self.width) + "+\n"
-       #print('cleared: ', self.cleared)
        for y in range(self.height):
            ret += "|"
            for x in range(self.width):
@@ -256,9 +253,6 @@ class Board(object):
                    ret += colorize(' ')
                else:
                    ret += colorize(self.board[x][y])
-           #if self.cleared[y] == 1:
-           #    #print('cleared', self.cleared, ', y: ', y)
-           #    self.cleared.pop(0)
            if y > 3 or clear:
                ret += "|\n"
            else:
@@ -267,17 +261,15 @@ class Board(object):
                        colorize(self.upcoming[1][y]) + \
                        colorize(self.upcoming[2][y]) + \
                        colorize(self.upcoming[3][y]) + "\n"
-           #moved down 2 lines... eh
-           #ret += "|\n" if (y < 2) or (y > 5) or clear else "|\t\t" + colorize(self.upcoming[0][y-2]) + colorize(self.upcoming[1][y-2]) + colorize(self.upcoming[2][y-2]) + colorize(self.upcoming[3][y-2]) + "\n"
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
 
     def __str__(self):
        ret = ''
+       ret += self.thing()
        if self.cleared.count(1) > 0:
            #TODO: check that multiple clear lines works! -- probably need a way to manually pick moves first
-           ret += self.thing(True) + '\n'
-       ret += self.thing()
+           ret += '\n' + self.thing(True)
        return ret
 
 def play_random_game():
@@ -287,6 +279,10 @@ def play_random_game():
             break
         (r, x, y) = random.choice(b.valid_moves)
         b.place(r, x, y)
+        if b.cleared.count(1) > 0:
+            print(b)
+            time.sleep(.25)
+        b.advance_game_state()
         print(b)
         time.sleep(.25)
 
@@ -305,8 +301,12 @@ def play_min_height_game():
                 max_y = y
         (r, x, y) = max_move
         b.place(r, x, y)
+        if b.cleared.count(1) > 0:
+            print(b)
+            time.sleep(.5)
+        b.advance_game_state()
         print(b)
-        time.sleep(.25)
+        time.sleep(.5)
 
 def displayAllRotations():
     all_pieces = list(pieces())
@@ -316,23 +316,11 @@ def displayAllRotations():
         for rot in range(i.num_rotations):
             b.next_piece = i
             b.place(rot, x, y)
+            b.advance_game_state()
             y += 5
         print(b)
 
 if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
-    #play_min_height_game()
-
-    b = Board()
-    print(b)
-    (I, T, J, L, O, Z, S) = pieces()
-    def drop_piece(piece, rotation, col):
-        b.next_piece = piece
-        b.drop(rotation, col)
-        print(b)
-
-    drop_piece(I, 0, 0)
-    drop_piece(I, 0, 4)
-    drop_piece(I, 1, 8)
-    drop_piece(I, 1, 9)
+    play_min_height_game()
