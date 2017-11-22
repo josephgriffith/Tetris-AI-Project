@@ -226,11 +226,12 @@ class Board(object):
         # Check for game over
         if len(self.valid_moves) == 0:
             self.game_over = True
-            return
 
         # Clear upcoming (after game over so we don't render the upcoming piece if the game is over)
+        self.upcoming = [[None]*4 for i in range(4)]
+
+        # Draw upcoming
         if not self.game_over:
-            self.upcoming = [[None]*4 for i in range(4)]
             self.paintPiece(self.upcoming)
 
     def drop(self, rotation, col):
