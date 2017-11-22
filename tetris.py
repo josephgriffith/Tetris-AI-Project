@@ -152,6 +152,7 @@ class Board(object):
         self.all_pieces = list(pieces())
         self.cleared = [0]*height
         self.game_over = False
+
         self.advance_game_state()
         self.paintPiece(self.upcoming)
 
@@ -188,14 +189,31 @@ class Board(object):
 
     def place(self, rotation, x, y):
         self.paintPiece(self.board, rotation, x, y)
-        # We can set the 'cleared' variable even before the game state is advanced.
-        self.cleared = self.find_completed_lines()
+
+        # Detect completed lines; put the result in self.cleared
+        # We can do this even before the game state is advanced.  This allows __str__ to highlight the cleared rows.
+        self.cleared = [0]*self.height
+        for y in range(self.height - 1, -1, -1):
+            s = 0
+            for x in range(self.width):
+                if self.board[x][y] != None:
+                    s += 1
+            if s == self.width: # If we cleared a line
+                self.cleared[y] = 1
 
     def advance_game_state(self):
-        self.clear_completed_lines_in_board()
-
         # Choose next piece
         self.next_piece = self.choose_random_piece()
+
+        # Clear cleared lines in the board
+        new_row = self.height - 1
+        for y in range(self.height - 1, -1, -1):
+            if new_row != y:
+                for x in range(self.width):
+                    self.board[x][new_row] = self.board[x][y]
+            if self.cleared[y] == 0: # If we didn't clear a line
+                new_row -= 1
+        self.cleared = [0]*self.height
 
         # Find all valid moves
         self.valid_moves = []
@@ -215,28 +233,6 @@ class Board(object):
             self.upcoming = [[None]*4 for i in range(4)]
             self.paintPiece(self.upcoming)
 
-    def find_completed_lines(self):
-        # Detect completed lines
-        cleared = [0]*self.height
-        for y in range(self.height - 1, -1, -1):
-            s = 0
-            for x in range(self.width):
-                if self.board[x][y] != None:
-                    s += 1
-            if s == self.width: # If we cleared a line
-                cleared[y] = 1
-        return cleared
-
-    def clear_completed_lines_in_board(self):
-        new_row = self.height - 1
-        for y in range(self.height - 1, -1, -1):
-            if new_row != y:
-                for x in range(self.width):
-                    self.board[x][new_row] = self.board[x][y]
-            if self.cleared[y] == 0: # If we didn't clear a line
-                new_row -= 1
-        self.cleared = [0]*self.height
-
     def drop(self, rotation, col):
         row = self.fits_row(rotation, col)
         if row == -1: # Invalid move requested
@@ -244,7 +240,7 @@ class Board(object):
         else:
             self.place(rotation, col, row)
 
-    def thing(self, clear=False):
+    def board_to_string(self, clear=False, print_upcoming=True):
        ret = "+" + "--" * (self.width) + "+\n"
        for y in range(self.height):
            ret += "|"
@@ -253,23 +249,24 @@ class Board(object):
                    ret += colorize(' ')
                else:
                    ret += colorize(self.board[x][y])
-           if y > 3 or clear:
+           if y > 3 or print_upcoming == False:
                ret += "|\n"
            else:
-               ret += "|\t\t" + \
-                       colorize(self.upcoming[0][y]) + \
-                       colorize(self.upcoming[1][y]) + \
-                       colorize(self.upcoming[2][y]) + \
-                       colorize(self.upcoming[3][y]) + "\n"
+               ret += "|\t\t"
+               for i in range(4):
+                   ret += colorize(self.upcoming[i][y])
+               ret += "\n"
        ret += "+" + "--" * (self.width) + "+" + "\n"
        return ret
 
     def __str__(self):
        ret = ''
-       ret += self.thing()
        if self.cleared.count(1) > 0:
-           #TODO: check that multiple clear lines works! -- probably need a way to manually pick moves first
-           ret += '\n' + self.thing(True)
+           ret += self.board_to_string(print_upcoming=False)
+           ret += '\n'
+           ret += self.board_to_string(True, False)
+       else:
+           ret += self.board_to_string(print_upcoming=True)
        return ret
 
 def play_random_game():
@@ -303,10 +300,10 @@ def play_min_height_game():
         b.place(r, x, y)
         if b.cleared.count(1) > 0:
             print(b)
-            time.sleep(.5)
+            time.sleep(.25)
         b.advance_game_state()
         print(b)
-        time.sleep(.5)
+        time.sleep(.25)
 
 def displayAllRotations():
     all_pieces = list(pieces())
