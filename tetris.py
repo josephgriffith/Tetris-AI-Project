@@ -5,14 +5,10 @@ import neuralnetworks as nn
 from copy import deepcopy
 
 # Goal: the AI should play a long game.
-# We'll have a train function to train the neural net.
-# The train function will play games of tetris and observe the outcome.
 # States which are closer to losing should have lower scores.
 # So, let's define a lost game to have value 0.  Then the state before a lost game has value 1, etc.
 # Then our use() function should choose the highest-value move.
 # The more we train, the higher the value for the initial state should be.
-
-# What do we do if the AI tries to make an illegal move?
 
 # Much of this code is taken and/or adapted from http://nbviewer.jupyter.org/url/www.cs.colostate.edu/~anderson/cs440/notebooks/21%20Reinforcement%20Learning%20with%20a%20Neural%20Network%20as%20the%20Q%20Function.ipynb
 
@@ -21,7 +17,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         move = random.choice(board.valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
-            Q = 1
+            Q = 0
         else:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(move)
             Q = Qnet.use(stateMoveRepresentation)
@@ -29,20 +25,10 @@ def epsilonGreedy(Qnet, board, epsilon):
         qs = []
         for m in board.valid_moves:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(m)
-            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 1)
+            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 0)
         move = board.valid_moves[np.argmax(qs)]
         Q = np.max(qs)
     return move, Q
-
-def play_ai_game():
-    b = Board()
-    while True:
-        # Generate the next piece
-        (position, rotation) = ai_get_move(b)
-        b.drop(rotation, position)
-        b.advance_game_state()
-        if b.is_game_over():
-            return
 
 def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
     # The inputs to the neural network are:
@@ -86,9 +72,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             else:
                 moveNext, Qnext = epsilonGreedy(Qnet, newBoard, epsilon)
 
-            # TODO: Qnext seems to never be anything except 0 or 1.  Shouldn't it be larger?
-
-            r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
+            r = -1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
             samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
@@ -98,7 +82,8 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             board = newBoard
 
         samples = np.array(samples)
-        print(samples[:, 32])
+        #print(samples[:, 32])
+        print(samples)
         X = samples[:, :31]
         T = samples[:, 31:32] + samples[:,32:33]
         Qnet.train(X, T, nTrainIterations, verbose=False)
