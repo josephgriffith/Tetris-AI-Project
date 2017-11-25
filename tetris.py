@@ -16,19 +16,21 @@ from copy import deepcopy
 
 # Much of this code is taken and/or adapted from http://nbviewer.jupyter.org/url/www.cs.colostate.edu/~anderson/cs440/notebooks/21%20Reinforcement%20Learning%20with%20a%20Neural%20Network%20as%20the%20Q%20Function.ipynb
 
-def epsilonGreedy(Qnet, valid_moves, epsilon):
+def epsilonGreedy(Qnet, board, epsilon):
     if np.random.uniform() < epsilon: # random move
-        move = random.choice(valid_moves)
+        move = random.choice(board.valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
             Q = 0
         else:
-            Q = Qnet.use(something)
+            stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(move)
+            Q = Qnet.use(stateMoveRepresentation)
     else: # greedy move
         qs = []
-        for m in valid_moves:
-            qs.append(Qnet.use(something) if Qnet.Xmeans is not None else 0)
-        move = valid_moves[np.argmax(qs)]
+        for m in board.valid_moves:
+            stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(m)
+            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 0)
+        move = board.valid_moves[np.argmax(qs)]
         Q = np.max(qs)
     return move, Q
 
@@ -42,7 +44,7 @@ def play_ai_game():
         if b.is_game_over():
             return
 
-def train(hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
+def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
     # The inputs to the neural network are:
     #   10 column heights
     #   7 inputs for which piece we're placing
@@ -54,43 +56,49 @@ def train(hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
     Qnet._standardizeT = lambda x: x # TODO: is this needed?
     Qnet._standardizeX = lambda x: x
 
-    # TODO: do this all a number of times
-    # epsilon *= epsilonDecayFactor
+    outcomes = np.zeros(nReps)
+    for rep in range(nReps):
+        if rep > 0:
+            epsilon *= epsilonDecayFactor
 
-    # Play a game, collecting samples
-    samples = []
-    board = Board()
-    move, _ = epsilonGreedy(Qnet, board.valid_moves, epsilon)
-    done = False
-    while not done:
+        # Play a game, collecting samples
+        samples = []
+        board = Board()
+        move, _ = epsilonGreedy(Qnet, board, epsilon)
+        done = False
+        step = 0
+        while not done:
+            step += 1
 
-        # TODO: move contains row and probably shouldn't
+            # TODO: move contains row and probably shouldn't
 
-        print(board)
+            # print(board)
 
-        newBoard = deepcopy(board) # TODO: make a function that returns the new state without modifying the current state, instead of deepcopy
-        newBoard.make_move(move)
+            newBoard = deepcopy(board) # TODO: make a function that returns the new state without modifying the current state, instead of deepcopy
+            newBoard.make_move(move)
 
-        if newBoard.game_over:
-            done = True
-            Qnext = 0
-        else:
-            moveNext, Qnext = epsilonGreedy(Qnet, newBoard.valid_moves, epsilon)
+            if newBoard.game_over:
+                done = True
+                Qnext = 0
+                outcomes[rep] = step
+            else:
+                moveNext, Qnext = epsilonGreedy(Qnet, newBoard, epsilon)
 
-        r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
-        stateRepresentation = board.getStateRepresentation()
-        moveRepresentation = board.getMoveRepresentation(move)
-        samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
+            r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
+            stateRepresentation = board.getStateRepresentation()
+            moveRepresentation = board.getMoveRepresentation(move)
+            samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
 
-        move = moveNext
-        board = newBoard
+            move = moveNext
+            board = newBoard
 
-    samples = np.array(samples)
-    X = samples[:, :31]
-    T = samples[:, 31:32] + samples[:,32:33]
-    Qnet.train(X, T, nIterations, verbose=False)
+        samples = np.array(samples)
+        X = samples[:, :31]
+        T = samples[:, 31:32] + samples[:,32:33]
+        Qnet.train(X, T, nIterations, verbose=False)
 
-    # TODO: experience replay
+        # TODO: experience replay
+    return Qnet, outcomes
 
 class Piece(object):
     def __init__(self, grid, num_rotations, which_piece):
@@ -381,4 +389,5 @@ if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
     #play_min_height_game()
-    train(1, .95, .99, 10)
+    (Qnet, outcomes) = train(10, 1, .95, .99, 10)
+    print(outcomes)
