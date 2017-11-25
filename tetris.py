@@ -11,21 +11,14 @@ from copy import deepcopy
 # So, let's define a lost game to have value 0.  Then the state before a lost game has value 1, etc.
 # Then our use() function should choose the highest-value move.
 # The more we train, the higher the value for the initial state should be.
-# The inputs to the neural network are:
-#   10 column heights
-#   7 inputs for which piece we're placing
-# The outputs from the neural network are:
-#   A column - 10 outputs
-#   A piece rotation - 4 outputs
 
 # What do we do if the AI tries to make an illegal move?
 
 # Much of this code is taken and/or adapted from http://nbviewer.jupyter.org/url/www.cs.colostate.edu/~anderson/cs440/notebooks/21%20Reinforcement%20Learning%20with%20a%20Neural%20Network%20as%20the%20Q%20Function.ipynb
 
-def epsilonGreedy(Qnet, board, epsilon):
-    moves = board.valid_moves
+def epsilonGreedy(Qnet, valid_moves, epsilon):
     if np.random.uniform() < epsilon: # random move
-        move = random.choice(moves)
+        move = random.choice(valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
             Q = 0
@@ -33,9 +26,9 @@ def epsilonGreedy(Qnet, board, epsilon):
             Q = Qnet.use(something)
     else: # greedy move
         qs = []
-        for m in moves:
+        for m in valid_moves:
             qs.append(Qnet.use(something) if Qnet.Xmeans is not None else 0)
-        move = moves[np.argmax(qs)]
+        move = valid_moves[np.argmax(qs)]
         Q = np.max(qs)
     return move, Q
 
@@ -49,19 +42,55 @@ def play_ai_game():
         if b.is_game_over():
             return
 
-def train(hiddenLayers):
-    Qnet = nn.NeuralNetwork(numInputs, hiddenLayers, numOutputs)
+def train(hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
+    # The inputs to the neural network are:
+    #   10 column heights
+    #   7 inputs for which piece we're placing
+    #   A column to place the piece in - 10 values
+    #   A piece rotation - 4 values
+    # The output from the neural network is:
+    #   A single number to represent the estimated number of moves to game over.
+    Qnet = nn.NeuralNetwork(31, hiddenLayers, 1)
     Qnet._standardizeT = lambda x: x # TODO: is this needed?
     Qnet._standardizeX = lambda x: x
 
     # TODO: do this all a number of times
+    # epsilon *= epsilonDecayFactor
 
     # Play a game, collecting samples
-    b = Board()
-    while(not b.game_over):
-        pass
-    # Train the network a number of times with that game
-    pass
+    samples = []
+    board = Board()
+    move, _ = epsilonGreedy(Qnet, board.valid_moves, epsilon)
+    done = False
+    while not done:
+
+        # TODO: move contains row and probably shouldn't
+
+        print(board)
+
+        newBoard = deepcopy(board) # TODO: make a function that returns the new state without modifying the current state, instead of deepcopy
+        newBoard.make_move(move)
+
+        if newBoard.game_over:
+            done = True
+            Qnext = 0
+        else:
+            moveNext, Qnext = epsilonGreedy(Qnet, newBoard.valid_moves, epsilon)
+
+        r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
+        stateRepresentation = board.getStateRepresentation()
+        moveRepresentation = board.getMoveRepresentation(move)
+        samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
+
+        move = moveNext
+        board = newBoard
+
+    samples = np.array(samples)
+    X = samples[:, :31]
+    T = samples[:, 31:32] + samples[:,32:33]
+    Qnet.train(X, T, nIterations, verbose=False)
+
+    # TODO: experience replay
 
 class Piece(object):
     def __init__(self, grid, num_rotations, which_piece):
@@ -156,6 +185,32 @@ class Board(object):
         self.advance_game_state()
         self.paintPiece(self.upcoming)
 
+    def getStateRepresentation(self):
+        # 10 column heights, 7 booleans for which piece is next
+        cols = [0] * 10
+        for i in range(self.width):
+            for j in range(self.height):
+                if self.board[i][j] != 0:
+                    cols[i] = j
+                    break
+
+        piece = [0] * 7
+        d = {"I": 0, "O": 1, "L": 2, "J": 3, "S": 4, "Z": 5, "T": 6}
+        piece[d[self.next_piece.which_piece]] = 1
+
+        return [*cols, *piece]
+
+    def getMoveRepresentation(self, move):
+        (rot, col, row) = move
+        # Output is 10 booleans for col, 4 outputs for rot
+        colOut = [0] * self.width
+        colOut[col] = 1
+
+        rotOut = [0] * 4
+        rotOut[rot] = 1
+
+        return [*colOut, *rotOut]
+
     def choose_random_piece(self):
         return random.choice(self.all_pieces)
 
@@ -186,6 +241,10 @@ class Board(object):
                 c = grid[piece_x][piece_y]
                 if c != 0:
                     canvas[piece_x + x][piece_y + y] = self.next_piece.which_piece
+
+    def make_move(self, move):
+        self.place(*move)
+        self.advance_game_state()
 
     def place(self, rotation, x, y):
         self.paintPiece(self.board, rotation, x, y)
@@ -321,4 +380,5 @@ def displayAllRotations():
 if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
-    play_min_height_game()
+    #play_min_height_game()
+    train(1, .95, .99, 10)
