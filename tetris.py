@@ -17,7 +17,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         move = random.choice(board.valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
-            Q = 0
+            Q = 2
         else:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(move)
             Q = Qnet.use(stateMoveRepresentation)
@@ -25,7 +25,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         qs = []
         for m in board.valid_moves:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(m)
-            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 0)
+            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 2)
         move = board.valid_moves[np.argmax(qs)]
         Q = np.max(qs)
     return move, Q
@@ -39,7 +39,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
     # The output from the neural network is:
     #   A single number to represent the estimated number of moves to game over.
     Qnet = nn.NeuralNetwork(31, hiddenLayers, 1)
-    Qnet._standardizeT = lambda x: x # TODO: is this needed?
+    Qnet._standardizeT = lambda x: x
     Qnet._standardizeX = lambda x: x
 
     outcomes = np.zeros(nReps)
@@ -72,7 +72,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             else:
                 moveNext, Qnext = epsilonGreedy(Qnet, newBoard, epsilon)
 
-            r = -1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
+            r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
             samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
@@ -82,8 +82,8 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             board = newBoard
 
         samples = np.array(samples)
-        #print(samples[:, 32])
-        print(samples)
+        print(samples[:, 32])
+        #print(samples)
         X = samples[:, :31]
         T = samples[:, 31:32] + samples[:,32:33]
         Qnet.train(X, T, nTrainIterations, verbose=False)
@@ -95,6 +95,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             samples[QnextNotZero, 31:32] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
             T = samples[:, 31:32] + samples[:,32:33]
             Qnet.train(X, T, nTrainIterations, verbose=False)
+
     return Qnet, outcomes
 
 class Piece(object):
@@ -192,12 +193,16 @@ class Board(object):
 
     def getStateRepresentation(self):
         # 10 column heights, 7 booleans for which piece is next
-        cols = [0] * 10
+        cols = [self.height] * 10
         for i in range(self.width):
             for j in range(self.height):
                 if self.board[i][j] != None:
                     cols[i] = j
                     break
+
+        # Normalize height to be 0-1
+        for i in range(self.width):
+            cols[i] /= self.height
 
         piece = [0] * 7
         d = {"I": 0, "O": 1, "L": 2, "J": 3, "S": 4, "Z": 5, "T": 6}
@@ -386,10 +391,20 @@ if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
     #play_min_height_game()
-    (Qnet, outcomes) = train(nReps=50,
-            hiddenLayers=[50, 50],
+    (Qnet, outcomes) = train(nReps=100,
+            hiddenLayers=[50, 30, 50],
             epsilon=1,
-            epsilonDecayFactor=.95,
-            nTrainIterations=50,
-            nReplays=50)
+            epsilonDecayFactor=.99,
+            nTrainIterations=10,
+            nReplays=5)
     print(outcomes)
+
+    # Play a game using the trained AI
+    b = Board()
+    numMoves = 0
+    while not b.game_over:
+        move, Q = epsilonGreedy(Qnet, b, 0)
+        b.make_move(move)
+        numMoves += 1
+        print(b)
+    print(numMoves, "moves")
