@@ -21,7 +21,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         move = random.choice(board.valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
-            Q = 0
+            Q = 1
         else:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(move)
             Q = Qnet.use(stateMoveRepresentation)
@@ -29,7 +29,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         qs = []
         for m in board.valid_moves:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(m)
-            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 0)
+            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 1)
         move = board.valid_moves[np.argmax(qs)]
         Q = np.max(qs)
     return move, Q
@@ -98,6 +98,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             board = newBoard
 
         samples = np.array(samples)
+        print(samples[:, 32])
         X = samples[:, :31]
         T = samples[:, 31:32] + samples[:,32:33]
         Qnet.train(X, T, nTrainIterations, verbose=False)
@@ -209,7 +210,7 @@ class Board(object):
         cols = [0] * 10
         for i in range(self.width):
             for j in range(self.height):
-                if self.board[i][j] != 0:
+                if self.board[i][j] != None:
                     cols[i] = j
                     break
 
@@ -403,7 +404,7 @@ if __name__ == "__main__":
     (Qnet, outcomes) = train(nReps=50,
             hiddenLayers=[50, 50],
             epsilon=1,
-            epsilonDecayFactor=.99,
+            epsilonDecayFactor=.95,
             nTrainIterations=50,
             nReplays=50)
     print(outcomes)
