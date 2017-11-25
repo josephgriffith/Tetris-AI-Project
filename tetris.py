@@ -44,7 +44,7 @@ def play_ai_game():
         if b.is_game_over():
             return
 
-def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
+def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
     # The inputs to the neural network are:
     #   10 column heights
     #   7 inputs for which piece we're placing
@@ -63,6 +63,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
 
         # Play a game, collecting samples
         samples = []
+        samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
         board = Board()
         move, _ = epsilonGreedy(Qnet, board, epsilon)
         done = False
@@ -81,13 +82,17 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
                 done = True
                 Qnext = 0
                 outcomes[rep] = step
+                print("Played game, lasted for", step, "moves, epsilon is", epsilon)
             else:
                 moveNext, Qnext = epsilonGreedy(Qnet, newBoard, epsilon)
+
+            # TODO: Qnext seems to never be anything except 0 or 1.  Shouldn't it be larger?
 
             r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
             samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
+            samplesNextStateForReplay.append([*newBoard.getStateRepresentation(), *newBoard.getMoveRepresentation(moveNext)])
 
             move = moveNext
             board = newBoard
@@ -95,9 +100,15 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nIterations):
         samples = np.array(samples)
         X = samples[:, :31]
         T = samples[:, 31:32] + samples[:,32:33]
-        Qnet.train(X, T, nIterations, verbose=False)
+        Qnet.train(X, T, nTrainIterations, verbose=False)
 
-        # TODO: experience replay
+        # Experience replay
+        samplesNextStateForReplay = np.array(samplesNextStateForReplay)
+        for replay in range(nReplays):
+            QnextNotZero = samples[:, 32] != 0
+            samples[QnextNotZero, 31:32] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
+            T = samples[:, 31:32] + samples[:,32:33]
+            Qnet.train(X, T, nTrainIterations, verbose=False)
     return Qnet, outcomes
 
 class Piece(object):
@@ -389,5 +400,10 @@ if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
     #play_min_height_game()
-    (Qnet, outcomes) = train(10, 1, .95, .99, 10)
+    (Qnet, outcomes) = train(nReps=50,
+            hiddenLayers=[50, 50],
+            epsilon=1,
+            epsilonDecayFactor=.99,
+            nTrainIterations=50,
+            nReplays=50)
     print(outcomes)
