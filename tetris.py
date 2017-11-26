@@ -391,10 +391,7 @@ def displayAllRotations():
             y += 5
         print(b)
 
-if __name__ == "__main__":
-    #displayAllRotations()
-    #play_random_game()
-    #play_min_height_game()
+def play_ai_game():
     (Qnet, outcomes) = train(nReps=1000,
             hiddenLayers=[20, 10, 2, 10, 20],
             epsilon=1,
@@ -413,3 +410,9 @@ if __name__ == "__main__":
         print(b)
         time.sleep(.25)
     print(numMoves, "moves")
+
+if __name__ == "__main__":
+    #displayAllRotations()
+    #play_random_game()
+    #play_min_height_game()
+    play_ai_game()
