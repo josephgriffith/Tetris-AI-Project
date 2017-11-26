@@ -194,6 +194,11 @@ class Board(object):
         self.advance_game_state()
         self.paintPiece(self.upcoming)
 
+    def set_next_piece(self, piece):
+        self.next_piece = piece
+        self.upcoming = [[None]*4 for i in range(4)]
+        self.paintPiece(self.upcoming)
+
     def getStateRepresentation(self):
         # 10 column heights, 7 booleans for which piece is next
         cols = [self.height] * 10
@@ -314,33 +319,33 @@ class Board(object):
             self.place(rotation, col, row)
 
     def board_to_string(self, clear=False, print_upcoming=True):
-       ret = "+" + "--" * (self.width) + "+\n"
-       for y in range(self.height):
-           ret += "|"
-           for x in range(self.width):
-               if clear and self.cleared[y] == 1:
-                   ret += colorize(' ')
-               else:
-                   ret += colorize(self.board[x][y])
-           if y > 3 or print_upcoming == False:
-               ret += "|\n"
-           else:
-               ret += "|\t\t"
-               for i in range(4):
-                   ret += colorize(self.upcoming[i][y])
-               ret += "\n"
-       ret += "+" + "--" * (self.width) + "+" + "\n"
-       return ret
+        ret = "+" + "--" * (self.width) + "+\n"
+        for y in range(self.height):
+            ret += "|"
+            for x in range(self.width):
+                if clear and self.cleared[y] == 1:
+                    ret += colorize(' ')
+                else:
+                    ret += colorize(self.board[x][y])
+            if y > 3 or print_upcoming == False:
+                ret += "|\n"
+            else:
+                ret += "|\t\t"
+                for i in range(4):
+                    ret += colorize(self.upcoming[i][y])
+                ret += "\n"
+        ret += "+" + "--" * (self.width) + "+" + "\n"
+        return ret
 
     def __str__(self):
-       ret = ''
-       if self.cleared.count(1) > 0:
-           ret += self.board_to_string(print_upcoming=False)
-           ret += '\n'
-           ret += self.board_to_string(True, False)
-       else:
-           ret += self.board_to_string(print_upcoming=True)
-       return ret
+        ret = ''
+        if self.cleared.count(1) > 0:
+            ret += self.board_to_string(print_upcoming=False)
+            ret += '\n'
+            ret += self.board_to_string(True, False)
+        else:
+            ret += self.board_to_string(print_upcoming=True)
+        return ret
 
 def play_random_game():
     b = Board()
@@ -411,8 +416,20 @@ def play_ai_game():
         time.sleep(.25)
     print(numMoves, "moves")
 
+def test_bug():
+    b = Board()
+    b.board = [[None, 'J', 'J', 'J', 'S', 'Z', None, 'L', 'L', None, 'S', None, None, None, 'S', 'O', 'O', 'L', 'L', 'S'], ['Z', 'J', None, 'S', 'S', 'Z', 'Z', 'L', None, 'S', 'S', 'T', 'T', 'T', 'S', 'O', 'O', 'L', 'S', 'S'], ['Z', 'Z', 'Z', 'S', None, 'S', 'Z', 'L', 'J', 'S', None, 'T', 'T', None, None, None, 'S', 'L', 'S', None], [None, 'Z', 'Z', 'Z', 'S', 'S', None, 'S', 'O', 'O', 'I', 'T', 'J', 'O', 'I', 'S', 'S', 'S', None, 'T'], [None, 'S', 'T', 'Z', 'S', None, 'S', 'S', 'O', 'O', 'I', 'I', 'J', 'O', 'I', 'S', 'S', 'S', 'T', 'T'], ['S', 'S', 'T', 'T', 'Z', None, 'S', None, 'I', None, 'I', 'I', 'J', 'J', 'I', 'I', 'S', None, 'L', 'T'], ['S', 'Z', 'T', None, 'Z', 'Z', 'T', 'L', 'I', None, 'I', 'I', None, 'S', 'I', 'I', None, None, 'L', 'I'], [None, 'Z', 'Z', 'J', 'Z', 'Z', 'T', 'T', 'I', 'J', 'Z', 'I', 'J', 'S', None, 'I', 'Z', 'L', 'L', 'I'], [None, None, 'Z', 'J', 'Z', 'Z', 'T', 'S', 'I', 'J', 'Z', 'Z', 'J', 'Z', 'T', 'I', 'Z', 'Z', None, 'I'], [None, None, None, 'J', 'J', 'Z', None, 'S', None, 'J', 'J', 'Z', 'J', 'Z', 'T', 'T', None, 'Z', None, 'I']]
+    (I, T, J, L, O, Z, S) = pieces()
+    b.set_next_piece(Z)
+    print(b)
+    b.drop(0, 7)
+    print(b)
+    b.advance_game_state()
+    print(b)
+
 if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
     #play_min_height_game()
-    play_ai_game()
+    #play_ai_game()
+    test_bug()
