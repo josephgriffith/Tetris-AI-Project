@@ -17,7 +17,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         move = random.choice(board.valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
-            Q = 0
+            Q = 2
         else:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(move)
             Q = Qnet.use(stateMoveRepresentation)
@@ -25,7 +25,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         qs = []
         for m in board.valid_moves:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(m)
-            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 0)
+            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 2)
         move = board.valid_moves[np.argmax(qs)]
         Q = np.max(qs)
     return move, Q
@@ -49,7 +49,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
 
         # Play a game, collecting samples
         samples = []
-        # samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
+        samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
         board = Board()
         move, _ = epsilonGreedy(Qnet, board, epsilon)
         done = False
@@ -76,27 +76,29 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
             samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
-            # samplesNextStateForReplay.append([*newBoard.getStateRepresentation(), *newBoard.getMoveRepresentation(moveNext)])
+            samplesNextStateForReplay.append([*newBoard.getStateRepresentation(), *newBoard.getMoveRepresentation(moveNext)])
 
             move = moveNext
             board = newBoard
 
         samples = np.array(samples)
         print(samples[:, 32])
+        #print(samples)
         X = samples[:, :31]
-        # T = samples[:, 31:32] + samples[:,32:33]
+        T = samples[:, 31:32] + samples[:,32:33]
 
         # We know how many moves were remaining at each state of the game, since we can count from the end
         # of the game.  So let's use that data to train.
-        T = np.array(range(len(samples)-1, -1, -1))
+        # T = np.array(range(len(samples)-1, -1, -1))
+
         Qnet.train(X, T, nTrainIterations, verbose=False)
 
         # Experience replay
-        # samplesNextStateForReplay = np.array(samplesNextStateForReplay)
+        samplesNextStateForReplay = np.array(samplesNextStateForReplay)
         for replay in range(nReplays):
-            # QnextNotZero = samples[:, 32] != 0
-            # samples[QnextNotZero, 31:32] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
-            #T = samples[:, 31:32] + samples[:,32:33]
+            QnextNotZero = samples[:, 32] > 2
+            samples[QnextNotZero, 31:32] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
+            T = samples[:, 31:32] + samples[:,32:33]
             Qnet.train(X, T, nTrainIterations, verbose=False)
 
     return Qnet, outcomes
@@ -211,6 +213,7 @@ class Board(object):
         # Normalize height to be 0-1
         for i in range(self.width):
             cols[i] /= self.height
+            cols[i] = 1 - cols[i]
 
         piece = [0] * 7
         d = {"I": 0, "O": 1, "L": 2, "J": 3, "S": 4, "Z": 5, "T": 6}
@@ -400,27 +403,34 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=1000,
-            hiddenLayers=[20, 10, 2, 10, 20],
+    (Qnet, outcomes) = train(nReps=100,
+            hiddenLayers=[20, 10, 10, 20],
             epsilon=1,
-            epsilonDecayFactor=.995,
-            nTrainIterations=5,
-            nReplays=5)
+            epsilonDecayFactor=.99,
+            nTrainIterations=10,
+            nReplays=10)
     print(outcomes)
 
-    # Play a game using the trained AI
-    b = Board()
-    numMoves = 0
-    while not b.game_over:
-        move, Q = epsilonGreedy(Qnet, b, 0)
-        b.make_move(move)
-        numMoves += 1
+    for i in range(3):
+        # Play a game using the trained AI
+        b = Board()
         print(b)
-        time.sleep(.25)
-    print(numMoves, "moves")
+        numMoves = 0
+        while not b.game_over:
+            move, Q = epsilonGreedy(Qnet, b, 0)
+            b.place(*move)
+            if b.cleared.count(1) > 0:
+                print(b)
+                time.sleep(.25)
+            b.advance_game_state()
+            numMoves += 1
+            print(b)
+            time.sleep(.25)
+        print(numMoves, "moves")
 
 if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
     #play_min_height_game()
+    np.set_printoptions(suppress=True) # Turn off scientific notation
     play_ai_game()
