@@ -290,6 +290,9 @@ class Board(object):
                     self.board[x][new_row] = self.board[x][y]
             if self.cleared[y] == 0: # If we didn't clear a line
                 new_row -= 1
+        for y in range(0, new_row+1):
+            for x in range(self.width):
+                self.board[x][y] = None
         self.cleared = [0]*self.height
 
         # Find all valid moves
@@ -416,20 +419,8 @@ def play_ai_game():
         time.sleep(.25)
     print(numMoves, "moves")
 
-def test_bug():
-    b = Board()
-    b.board = [[None, 'J', 'J', 'J', 'S', 'Z', None, 'L', 'L', None, 'S', None, None, None, 'S', 'O', 'O', 'L', 'L', 'S'], ['Z', 'J', None, 'S', 'S', 'Z', 'Z', 'L', None, 'S', 'S', 'T', 'T', 'T', 'S', 'O', 'O', 'L', 'S', 'S'], ['Z', 'Z', 'Z', 'S', None, 'S', 'Z', 'L', 'J', 'S', None, 'T', 'T', None, None, None, 'S', 'L', 'S', None], [None, 'Z', 'Z', 'Z', 'S', 'S', None, 'S', 'O', 'O', 'I', 'T', 'J', 'O', 'I', 'S', 'S', 'S', None, 'T'], [None, 'S', 'T', 'Z', 'S', None, 'S', 'S', 'O', 'O', 'I', 'I', 'J', 'O', 'I', 'S', 'S', 'S', 'T', 'T'], ['S', 'S', 'T', 'T', 'Z', None, 'S', None, 'I', None, 'I', 'I', 'J', 'J', 'I', 'I', 'S', None, 'L', 'T'], ['S', 'Z', 'T', None, 'Z', 'Z', 'T', 'L', 'I', None, 'I', 'I', None, 'S', 'I', 'I', None, None, 'L', 'I'], [None, 'Z', 'Z', 'J', 'Z', 'Z', 'T', 'T', 'I', 'J', 'Z', 'I', 'J', 'S', None, 'I', 'Z', 'L', 'L', 'I'], [None, None, 'Z', 'J', 'Z', 'Z', 'T', 'S', 'I', 'J', 'Z', 'Z', 'J', 'Z', 'T', 'I', 'Z', 'Z', None, 'I'], [None, None, None, 'J', 'J', 'Z', None, 'S', None, 'J', 'J', 'Z', 'J', 'Z', 'T', 'T', None, 'Z', None, 'I']]
-    (I, T, J, L, O, Z, S) = pieces()
-    b.set_next_piece(Z)
-    print(b)
-    b.drop(0, 7)
-    print(b)
-    b.advance_game_state()
-    print(b)
-
 if __name__ == "__main__":
     #displayAllRotations()
     #play_random_game()
     #play_min_height_game()
-    #play_ai_game()
-    test_bug()
+    play_ai_game()
