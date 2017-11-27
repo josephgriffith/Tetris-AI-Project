@@ -17,7 +17,7 @@ def epsilonGreedy(Qnet, board, epsilon):
         move = random.choice(board.valid_moves)
         if Qnet.Xmeans is None:
             # Qnet is not initialized yet
-            Q = 2
+            Q = 0
         else:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(move)
             Q = Qnet.use(stateMoveRepresentation)
@@ -25,9 +25,9 @@ def epsilonGreedy(Qnet, board, epsilon):
         qs = []
         for m in board.valid_moves:
             stateMoveRepresentation = board.getStateRepresentation() + board.getMoveRepresentation(m)
-            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 2)
-        move = board.valid_moves[np.argmax(qs)]
-        Q = np.max(qs)
+            qs.append(Qnet.use(stateMoveRepresentation) if Qnet.Xmeans is not None else 0)
+        move = board.valid_moves[np.argmin(qs)]
+        Q = np.min(qs)
     return move, Q
 
 def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
@@ -40,7 +40,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
     #   A single number to represent the estimated number of moves to game over.
     Qnet = nn.NeuralNetwork(31, hiddenLayers, 1)
     Qnet._standardizeT = lambda x: x
-    Qnet._standardizeX = lambda x: x
+    Qnet._unstandardizeT = lambda x: x
 
     outcomes = np.zeros(nReps)
     for rep in range(nReps):
@@ -50,7 +50,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         # Play a game, collecting samples
         samples = []
         samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
-        board = Board()
+        board = Board(10, 5)
         move, _ = epsilonGreedy(Qnet, board, epsilon)
         done = False
         step = 0
@@ -64,6 +64,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             newBoard = deepcopy(board) # TODO: make a function that returns the new state without modifying the current state, instead of deepcopy
             newBoard.make_move(move)
 
+
             if newBoard.game_over:
                 done = True
                 Qnext = 0
@@ -72,7 +73,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             else:
                 moveNext, Qnext = epsilonGreedy(Qnet, newBoard, epsilon)
 
-            r = 1 # We're trying to maximize the number of moves before game over, so we want r to be positive.
+            r = -1
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
             samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
@@ -86,12 +87,16 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         #print(samples)
         X = samples[:, :31]
         T = samples[:, 31:32] + samples[:,32:33]
+        #print(samples[:, 31:32], samples[:, 32:33])
 
         # We know how many moves were remaining at each state of the game, since we can count from the end
         # of the game.  So let's use that data to train.
         # T = np.array(range(len(samples)-1, -1, -1))
 
         Qnet.train(X, T, nTrainIterations, verbose=False)
+        # print(Qnet.W[:,0])
+
+        #print(Qnet.getErrorTrace())
 
         # Experience replay
         samplesNextStateForReplay = np.array(samplesNextStateForReplay)
@@ -403,17 +408,18 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=100,
-            hiddenLayers=[20, 10, 10, 20],
+    (Qnet, outcomes) = train(nReps=2000,
+            #hiddenLayers=[20, 10, 10, 20],
+            hiddenLayers=[20, 20],
             epsilon=1,
-            epsilonDecayFactor=.99,
+            epsilonDecayFactor=.999,
             nTrainIterations=10,
-            nReplays=10)
+            nReplays=0)
     print(outcomes)
 
     for i in range(3):
         # Play a game using the trained AI
-        b = Board()
+        b = Board(10, 5)
         print(b)
         numMoves = 0
         while not b.game_over:
