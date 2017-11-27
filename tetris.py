@@ -64,7 +64,6 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             newBoard = deepcopy(board) # TODO: make a function that returns the new state without modifying the current state, instead of deepcopy
             newBoard.make_move(move)
 
-
             if newBoard.game_over:
                 done = True
                 Qnext = 0
@@ -410,11 +409,11 @@ def displayAllRotations():
 def play_ai_game():
     (Qnet, outcomes) = train(nReps=2000,
             #hiddenLayers=[20, 10, 10, 20],
-            hiddenLayers=[20, 20],
+            hiddenLayers=[20, 10, 10, 20],
             epsilon=1,
             epsilonDecayFactor=.999,
             nTrainIterations=10,
-            nReplays=0)
+            nReplays=5)
     print(outcomes)
 
     for i in range(3):

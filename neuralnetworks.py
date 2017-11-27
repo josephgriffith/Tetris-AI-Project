@@ -12,7 +12,7 @@ import pdb
 
 class NeuralNetwork:
 
-    def __init__(self, ni,nhs,no):        
+    def __init__(self, ni,nhs,no):
         if nhs == 0 or nhs == [0] or nhs is None or nhs == [None]:
             nhs = None
         else:
@@ -41,7 +41,7 @@ class NeuralNetwork:
 
     def train(self,X,T,nIterations=100,verbose=False,
               weightPrecision=0,errorPrecision=0):
-        
+
         if self.Xmeans is None:
             self.Xmeans = X.mean(axis=0)
             self.Xstds = X.std(axis=0)
@@ -100,10 +100,10 @@ class NeuralNetwork:
 
     def getNumberOfIterations(self):
         return self.numberOfIterations
-    
+
     def getErrorTrace(self):
         return self.errorTrace
-        
+
     def draw(self,inputNames = None, outputNames = None):
         ml.draw(self.Vs+[self.W], inputNames, outputNames)
 
@@ -141,7 +141,7 @@ class NeuralNetwork:
 
     def _standardizeX(self,X):
         result = (X - self.Xmeans) / self.XstdsFixed
-        result[:,self.Xconstant] = 0.0
+        #result[:,self.Xconstant] = 0.0
         return result
     def _unstandardizeX(self,Xs):
         return self.Xstds * Xs + self.Xmeans
@@ -151,7 +151,7 @@ class NeuralNetwork:
         return result
     def _unstandardizeT(self,Ts):
         return self.Tstds * Ts + self.Tmeans
-   
+
     def _pack(self,Vs,W):
         if Vs is None:
             return np.array(W.flat)
@@ -179,7 +179,7 @@ class NeuralNetwork:
         else:
             str += '  Network is not trained.'
         return str
-            
+
 
 ######################################################################
 ### class NeuralNetworkClassifier
@@ -250,7 +250,7 @@ class NeuralNetworkClassifier(NeuralNetwork):
         self.numberOfIterations = len(self.errorTrace) - 1
         self.trained = True
         return self
-    
+
     def use(self,X,allOutputs=False):
         Xst = self._standardizeX(X)
         Y,Z = self._forward_pass(Xst)
@@ -282,7 +282,7 @@ if __name__== "__main__":
     T = 1.5 + 0.6 * X + 0.8 * np.sin(1.5*X)
     T[np.logical_and(X > 2, X < 3)] *= 3
     T[np.logical_and(X > 5, X < 7)] *= 3
-    
+
     nSamples = 100
     Xtest = np.linspace(0,10,nSamples).reshape((-1,1)) + 10.0/nSamples/2
     Ttest = 1.5 + 0.6 * Xtest + 0.8 * np.sin(1.5*Xtest) + np.random.uniform(-2,2,size=(nSamples,1))
@@ -293,7 +293,7 @@ if __name__== "__main__":
     # # nnet = NeuralNetwork(1,(10,2,10),1)
     # # nnet = NeuralNetwork(1,(5,5),1)
     nnet = NeuralNetwork(1,(3,3,3,3),1)
-    
+
     nnet.train(X,T,errorPrecision=1.e-10,weightPrecision=1.e-10,nIterations=1000)
     print( "scg stopped after",nnet.getNumberOfIterations(),"iterations:",nnet.reason)
     Y = nnet.use(X)
@@ -305,13 +305,13 @@ if __name__== "__main__":
     # for i in range(100000):
     #     Ytest,Ztest = nnet.use(Xtest, allOutputs=True)
     # print( 'total time to make 100000 predictions:',time.time() - t0)
-    
+
     # print( 'Inputs, Targets, Estimated Targets')
     # print( np.hstack((X,T,Y)))
 
     plt.figure(1)
     plt.clf()
-    
+
     nHLayers = len(nnet.nhs)
     nPlotRows = 3 + nHLayers
 
@@ -319,7 +319,7 @@ if __name__== "__main__":
     plt.plot(nnet.getErrorTrace())
     plt.xlabel('Iterations');
     plt.ylabel('RMSE')
-    
+
     plt.title('Regression Example')
     plt.subplot(nPlotRows,2,3)
     plt.plot(X,T,'o-')
@@ -348,11 +348,11 @@ if __name__== "__main__":
     nnet.draw(['x'],['sine'])
     plt.draw()
 
-    
+
     # Now train multiple nets to compare error for different numbers of hidden layers
 
     if False:  # make True to run multiple network experiment
-        
+
         def experiment(hs,nReps,nIter,X,T,Xtest,Ytest):
             results = []
             for i in range(nReps):
@@ -368,7 +368,7 @@ if __name__== "__main__":
 
         plt.figure(2)
         plt.clf()
-    
+
         results = []
         # hiddens [ [5]*i for i in range(1,6) ]
         hiddens = [[12], [6,6], [4,4,4], [3,3,3,3], [2,2,2,2,2,2],
@@ -390,7 +390,7 @@ if __name__== "__main__":
         plt.ylabel('Mean RMSE')
         plt.xlabel('Network Architecture')
 
-        
+
     print( '\n------------------------------------------------------------')
     print( "Classification Example: XOR, approximate f(x1,x2) = x1 xor x2")
     print( '                        Using neural net with 2 inputs, 3 hidden units, 2 outputs')
@@ -400,14 +400,14 @@ if __name__== "__main__":
     nnet.train(X,T,weightPrecision=1.e-10,errorPrecision=1.e-10,nIterations=100)
     print( "scg stopped after",nnet.getNumberOfIterations(),"iterations:",nnet.reason)
     (classes,y,Z) = nnet.use(X, allOutputs=True)
-    
+
 
     print( 'X(x1,x2), Target Classses, Predicted Classes')
     print( np.hstack((X,T,classes)))
 
     print( "Hidden Outputs")
     print( Z)
-    
+
     plt.figure(3)
     plt.clf()
     plt.subplot(2,1,1)
@@ -418,5 +418,5 @@ if __name__== "__main__":
     plt.subplot(2,1,2)
     nnet.draw(['x1','x2'],['xor'])
 
-    
-        
+
+
