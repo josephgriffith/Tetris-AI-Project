@@ -38,7 +38,10 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
     #   A piece rotation - 4 values
     # The output from the neural network is:
     #   A single number to represent the estimated number of moves to game over.
-    Qnet = nn.NeuralNetwork(31, hiddenLayers, 1)
+    boardWidth = 10
+    boardHeight = 5
+    numDataCols = boardWidth * boardHeight + 7 + 10 + 4
+    Qnet = nn.NeuralNetwork(numDataCols, hiddenLayers, 1)
     Qnet._standardizeT = lambda x: x
     Qnet._unstandardizeT = lambda x: x
 
@@ -50,7 +53,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         # Play a game, collecting samples
         samples = []
         samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
-        board = Board(10, 5)
+        board = Board(boardWidth, boardHeight)
         move, _ = epsilonGreedy(Qnet, board, epsilon)
         done = False
         step = 0
@@ -82,10 +85,10 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             board = newBoard
 
         samples = np.array(samples)
-        print(samples[:, 32])
+        print(samples[:, numDataCols+1])
         #print(samples)
-        X = samples[:, :31]
-        T = samples[:, 31:32] + samples[:,32:33]
+        X = samples[:, :numDataCols]
+        T = samples[:, numDataCols:numDataCols+1] + samples[:,numDataCols+1:numDataCols+2]
         #print(samples[:, 31:32], samples[:, 32:33])
 
         # We know how many moves were remaining at each state of the game, since we can count from the end
@@ -100,9 +103,9 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         # Experience replay
         samplesNextStateForReplay = np.array(samplesNextStateForReplay)
         for replay in range(nReplays):
-            QnextNotZero = samples[:, 32] > 2
-            samples[QnextNotZero, 31:32] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
-            T = samples[:, 31:32] + samples[:,32:33]
+            QnextNotZero = samples[:, numDataCols+1] > 2
+            samples[QnextNotZero, numDataCols:numDataCols+1] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
+            T = samples[:, numDataCols:numDataCols+1] + samples[:,numDataCols+1:numDataCols+2]
             Qnet.train(X, T, nTrainIterations, verbose=False)
 
     return Qnet, outcomes
@@ -207,23 +210,29 @@ class Board(object):
 
     def getStateRepresentation(self):
         # 10 column heights, 7 booleans for which piece is next
-        cols = [self.height] * 10
-        for i in range(self.width):
-            for j in range(self.height):
-                if self.board[i][j] != None:
-                    cols[i] = j
-                    break
+        data = [0] * self.height * self.width
+        for y in range(self.height):
+            for x in range(self.width):
+                if self.board[x][y] is not None:
+                    data[x * y] = 1
 
-        # Normalize height to be 0-1
-        for i in range(self.width):
-            cols[i] /= self.height
-            cols[i] = 1 - cols[i]
+        # cols = [self.height] * 10
+        # for i in range(self.width):
+        #     for j in range(self.height):
+        #         if self.board[i][j] != None:
+        #             cols[i] = j
+        #             break
+
+        # # Normalize height to be 0-1
+        # for i in range(self.width):
+        #     cols[i] /= self.height
+        #     cols[i] = 1 - cols[i]
 
         piece = [0] * 7
         d = {"I": 0, "O": 1, "L": 2, "J": 3, "S": 4, "Z": 5, "T": 6}
         piece[d[self.next_piece.which_piece]] = 1
 
-        return [*cols, *piece]
+        return [*data, *piece]
 
     def getMoveRepresentation(self, move):
         (rot, col, row) = move
@@ -237,7 +246,8 @@ class Board(object):
         return [*colOut, *rotOut]
 
     def choose_random_piece(self):
-        return random.choice(self.all_pieces)
+        return self.all_pieces[0]
+        #return random.choice(self.all_pieces)
 
     def make_board(self):
         return [[None] * self.height for i in range(self.width)]
@@ -407,13 +417,13 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=2000,
+    (Qnet, outcomes) = train(nReps=1000,
             #hiddenLayers=[20, 10, 10, 20],
-            hiddenLayers=[20, 10, 10, 20],
+            hiddenLayers=[50, 50],
             epsilon=1,
-            epsilonDecayFactor=.999,
-            nTrainIterations=10,
-            nReplays=5)
+            epsilonDecayFactor=.995,
+            nTrainIterations=1,
+            nReplays=0)
     print(outcomes)
 
     for i in range(3):
