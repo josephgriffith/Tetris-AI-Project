@@ -163,32 +163,34 @@ def colorize(char):
 def pieces():
     # generator that returns all the non-rotated pieces
     # Note these are mirrored here since X is the first dimension and Y is the second.
-    yield Piece(((1,),
+    I = Piece(((1,),
                  (1,),
                  (1,),
                  (1,)), 2, "I")
 
-    yield Piece(((0, 1, 0),
+    T = Piece(((0, 1, 0),
                  (1, 1, 1)), 4, "T")
 
-    yield Piece(((1, 0),
+    J = Piece(((1, 0),
                  (1, 0),
                  (1, 1)), 4, "J")
 
-    yield Piece(((0, 1),
+    L = Piece(((0, 1),
                  (0, 1),
                  (1, 1)), 4, "L")
 
-    yield Piece(((1, 1),
+    O = Piece(((1, 1),
                  (1, 1)), 1, "O")
 
-    yield Piece(((1, 0),
+    Z = Piece(((1, 0),
                  (1, 1),
                  (0, 1)), 2, "Z")
 
-    yield Piece(((0, 1),
+    S = Piece(((0, 1),
                  (1, 1),
                  (1, 0)), 2, "S")
+
+    return [I, T, J, L, O, Z, S]
 
 class Board(object):
     def __init__(self, width=10, height=20):
@@ -246,8 +248,7 @@ class Board(object):
         return [*colOut, *rotOut]
 
     def choose_random_piece(self):
-        return self.all_pieces[0]
-        #return random.choice(self.all_pieces)
+        return random.choice(self.all_pieces)
 
     def make_board(self):
         return [[None] * self.height for i in range(self.width)]
@@ -417,11 +418,11 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=1000,
+    (Qnet, outcomes) = train(nReps=5000,
             #hiddenLayers=[20, 10, 10, 20],
             hiddenLayers=[50, 50],
             epsilon=1,
-            epsilonDecayFactor=.995,
+            epsilonDecayFactor=.999,
             nTrainIterations=1,
             nReplays=0)
     print(outcomes)
