@@ -190,7 +190,8 @@ def pieces():
                  (1, 1),
                  (1, 0)), 2, "S")
 
-    return [I, T, J, L, O, Z, S]
+    #return [I, T, J, L, O, Z, S]
+    return [I]
 
 class Board(object):
     def __init__(self, width=10, height=20):
@@ -449,4 +450,5 @@ if __name__ == "__main__":
     #play_random_game()
     #play_min_height_game()
     np.set_printoptions(suppress=True) # Turn off scientific notation
+    np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
     play_ai_game()
