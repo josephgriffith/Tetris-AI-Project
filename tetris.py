@@ -51,7 +51,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             epsilon *= epsilonDecayFactor
 
         # Play a game, collecting samples
-        samples = []
+        samples = {}
         samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
         board = Board(boardWidth, boardHeight)
         move, _ = epsilonGreedy(Qnet, board, epsilon)
@@ -78,22 +78,34 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             r = -1
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
-            samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
+            fullRep = (*stateRepresentation, *moveRepresentation)
+            # It's possible to see the same board state twice.
+            # If that happens, we should only keep the one furthest from game over,
+            # since that represents the true game length from that state.
+            if fullRep in samples:
+                (_, existingQnext) = samples[fullRep]
+                Qnext = min(Qnext, existingQnext)
+            samples[fullRep] = (r, Qnext)
+            #samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
             samplesNextStateForReplay.append([*newBoard.getStateRepresentation(), *newBoard.getMoveRepresentation(moveNext)])
 
             move = moveNext
             board = newBoard
 
-        samples = np.array(samples)
-        print(samples[:, numDataCols+1])
+        # Convert samples to an array.
+        samples_ary = []
+        for key, value in samples.items():
+            samples_ary.append([*key, *value])
+        samples = np.array(samples_ary)
+        #print(samples[:, numDataCols+1])
         #print(samples)
         X = samples[:, :numDataCols]
         T = samples[:, numDataCols:numDataCols+1] + samples[:,numDataCols+1:numDataCols+2]
-        #print(samples[:, 31:32], samples[:, 32:33])
 
         # We know how many moves were remaining at each state of the game, since we can count from the end
         # of the game.  So let's use that data to train.
         # T = np.array(range(len(samples)-1, -1, -1))
+
 
         Qnet.train(X, T, nTrainIterations, verbose=False)
         # print(Qnet.W[:,0])
