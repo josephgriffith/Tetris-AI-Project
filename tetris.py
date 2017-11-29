@@ -98,7 +98,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         #     samples_ary.append([*key, *value])
         # samples = np.array(samples_ary)
         samples = np.array(samples)
-        print(samples[:, numDataCols+1])
+        #print(samples[:, numDataCols+1])
         #print(samples)
         X = samples[:, :numDataCols]
         T = samples[:, numDataCols:numDataCols+1] + samples[:,numDataCols+1:numDataCols+2]
@@ -203,8 +203,8 @@ def pieces():
                  (1, 1),
                  (1, 0)), 2, "S")
 
-    #return [I, T, J, L, O, Z, S]
-    return [I]
+    return [I, T, J, L, O, Z, S]
+    #return [I, O]
 
 class Board(object):
     def __init__(self, width=10, height=20):
@@ -262,9 +262,9 @@ class Board(object):
         return [*colOut, *rotOut]
 
     def choose_random_piece(self):
-        self.all_pieces = self.all_pieces[1:] + self.all_pieces[:1]
-        return self.all_pieces[0]
-        #return random.choice(self.all_pieces)
+        #self.all_pieces = self.all_pieces[1:] + self.all_pieces[:1]
+        #return self.all_pieces[0]
+        return random.choice(self.all_pieces)
 
     def make_board(self):
         return [[None] * self.height for i in range(self.width)]
@@ -434,16 +434,16 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=500,
+    (Qnet, outcomes) = train(nReps=5000,
             #hiddenLayers=[20, 10, 10, 20],
             hiddenLayers=[50, 50],
             epsilon=1,
-            epsilonDecayFactor=.99,
-            nTrainIterations=10,
-            nReplays=10)
-    print(outcomes)
+            epsilonDecayFactor=.999,
+            nTrainIterations=1,
+            nReplays=1)
+    print(",".join(str(int(x)) for x in outcomes))
 
-    for i in range(3):
+    for i in range(1):
         # Play a game using the trained AI
         b = Board(10, 5)
         print(b)
