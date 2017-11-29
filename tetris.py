@@ -32,7 +32,7 @@ def epsilonGreedy(Qnet, board, epsilon):
 
 def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
     # The inputs to the neural network are:
-    #   10 column heights
+    #   width * height 0/1 values for the board
     #   7 inputs for which piece we're placing
     #   A column to place the piece in - 10 values
     #   A piece rotation - 4 values
