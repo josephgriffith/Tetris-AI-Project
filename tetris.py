@@ -39,7 +39,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
     # The output from the neural network is:
     #   A single number to represent the estimated number of moves to game over.
     boardWidth = 10
-    boardHeight = 20
+    boardHeight = 5
     numDataCols = boardWidth * boardHeight + 7 + 10 + 4
     Qnet = nn.NeuralNetwork(numDataCols, hiddenLayers, 1)
     Qnet._standardizeT = lambda x: x
@@ -204,7 +204,7 @@ def pieces():
                  (1, 0)), 2, "S")
 
     #return [I, T, J, L, O, Z, S]
-    return [I, O]
+    return [I]
 
 class Board(object):
     def __init__(self, width=10, height=20):
@@ -434,7 +434,7 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=100,
+    (Qnet, outcomes) = train(nReps=500,
             #hiddenLayers=[20, 10, 10, 20],
             hiddenLayers=[50, 50],
             epsilon=1,
@@ -445,7 +445,7 @@ def play_ai_game():
 
     for i in range(3):
         # Play a game using the trained AI
-        b = Board()
+        b = Board(10, 5)
         print(b)
         numMoves = 0
         while not b.game_over:
