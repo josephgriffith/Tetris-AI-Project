@@ -51,7 +51,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             epsilon *= epsilonDecayFactor
 
         # Play a game, collecting samples
-        samples = {}
+        samples = []
         samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
         board = Board(boardWidth, boardHeight)
         move, _ = epsilonGreedy(Qnet, board, epsilon)
@@ -78,25 +78,26 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             r = -1
             stateRepresentation = board.getStateRepresentation()
             moveRepresentation = board.getMoveRepresentation(move)
-            fullRep = (*stateRepresentation, *moveRepresentation)
+            # fullRep = (*stateRepresentation, *moveRepresentation)
             # It's possible to see the same board state twice.
             # If that happens, we should only keep the one furthest from game over,
             # since that represents the true game length from that state.
-            if fullRep in samples:
-                (_, existingQnext) = samples[fullRep]
-                Qnext = min(Qnext, existingQnext)
-            samples[fullRep] = (r, Qnext)
-            #samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
+            # if fullRep in samples:
+            #     (_, existingQnext) = samples[fullRep]
+            #     Qnext = min(Qnext, existingQnext)
+            # samples[fullRep] = (r, Qnext)
+            samples.append([*stateRepresentation, *moveRepresentation, r, Qnext])
             samplesNextStateForReplay.append([*newBoard.getStateRepresentation(), *newBoard.getMoveRepresentation(moveNext)])
 
             move = moveNext
             board = newBoard
 
         # Convert samples to an array.
-        samples_ary = []
-        for key, value in samples.items():
-            samples_ary.append([*key, *value])
-        samples = np.array(samples_ary)
+        # samples_ary = []
+        # for key, value in samples.items():
+        #     samples_ary.append([*key, *value])
+        # samples = np.array(samples_ary)
+        samples = np.array(samples)
         print(samples[:, numDataCols+1])
         #print(samples)
         X = samples[:, :numDataCols]
