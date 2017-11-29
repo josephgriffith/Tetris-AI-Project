@@ -39,7 +39,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
     # The output from the neural network is:
     #   A single number to represent the estimated number of moves to game over.
     boardWidth = 10
-    boardHeight = 5
+    boardHeight = 20
     numDataCols = boardWidth * boardHeight + 7 + 10 + 4
     Qnet = nn.NeuralNetwork(numDataCols, hiddenLayers, 1)
     Qnet._standardizeT = lambda x: x
@@ -97,7 +97,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         for key, value in samples.items():
             samples_ary.append([*key, *value])
         samples = np.array(samples_ary)
-        #print(samples[:, numDataCols+1])
+        print(samples[:, numDataCols+1])
         #print(samples)
         X = samples[:, :numDataCols]
         T = samples[:, numDataCols:numDataCols+1] + samples[:,numDataCols+1:numDataCols+2]
@@ -115,8 +115,8 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         # Experience replay
         samplesNextStateForReplay = np.array(samplesNextStateForReplay)
         for replay in range(nReplays):
-            QnextNotZero = samples[:, numDataCols+1] > 2
-            samples[QnextNotZero, numDataCols:numDataCols+1] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
+            QnextNotZero = samples[:, numDataCols+1] != 0
+            samples[QnextNotZero, numDataCols+1:numDataCols+2] = Qnet.use(samplesNextStateForReplay[QnextNotZero,:])
             T = samples[:, numDataCols:numDataCols+1] + samples[:,numDataCols+1:numDataCols+2]
             Qnet.train(X, T, nTrainIterations, verbose=False)
 
@@ -203,7 +203,7 @@ def pieces():
                  (1, 0)), 2, "S")
 
     #return [I, T, J, L, O, Z, S]
-    return [I]
+    return [I, O]
 
 class Board(object):
     def __init__(self, width=10, height=20):
@@ -261,7 +261,9 @@ class Board(object):
         return [*colOut, *rotOut]
 
     def choose_random_piece(self):
-        return random.choice(self.all_pieces)
+        self.all_pieces = self.all_pieces[1:] + self.all_pieces[:1]
+        return self.all_pieces[0]
+        #return random.choice(self.all_pieces)
 
     def make_board(self):
         return [[None] * self.height for i in range(self.width)]
@@ -431,18 +433,18 @@ def displayAllRotations():
         print(b)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=5000,
+    (Qnet, outcomes) = train(nReps=100,
             #hiddenLayers=[20, 10, 10, 20],
             hiddenLayers=[50, 50],
             epsilon=1,
-            epsilonDecayFactor=.999,
-            nTrainIterations=1,
-            nReplays=0)
+            epsilonDecayFactor=.99,
+            nTrainIterations=10,
+            nReplays=10)
     print(outcomes)
 
     for i in range(3):
         # Play a game using the trained AI
-        b = Board(10, 5)
+        b = Board()
         print(b)
         numMoves = 0
         while not b.game_over:
