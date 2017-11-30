@@ -60,6 +60,9 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
         while not done:
             step += 1
 
+            if step > 100:
+                return Qnet, outcomes
+
             # TODO: move contains row and probably shouldn't
 
             # print(board)
@@ -433,10 +436,37 @@ def displayAllRotations():
             y += 5
         print(b)
 
+def what(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
+    print("nReps", nReps, "hiddenLayers", hiddenLayers, "epsilon", epsilon, "epsilonDecayFactor", epsilonDecayFactor, "nTrainIterations", nTrainIterations, "nReplays", nReplays, ": ", end="", flush=True)
+    startTime = time.time()
+    (Qnet, outcomes) = train(nReps=nReps,
+            hiddenLayers=hiddenLayers,
+            epsilon=epsilon,
+            epsilonDecayFactor=epsilonDecayFactor,
+            nTrainIterations=nTrainIterations,
+            nReplays=nReplays)
+    endTime = time.time()
+    elapsedTime = endTime - startTime
+    longest_game = max(outcomes)
+    average_game = sum(outcomes) / len(outcomes)
+    print("longest", longest_game, "average", average_game, "elapsedTime", elapsedTime)
+
+
+def play_some_games():
+    for i in range(1, 10):
+        hiddenLayers = [1] * i
+        nReps = 1000
+        epsilon = 1
+        epsilonDecayFactor = .96
+        nTrainIterations = 1
+        nReplays = 0
+
+        what(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays)
+
 def play_ai_game():
     (Qnet, outcomes) = train(nReps=5000,
             #hiddenLayers=[20, 10, 10, 20],
-            hiddenLayers=[50, 50],
+            hiddenLayers=[50, 20, 10, 2, 10, 20, 50],
             epsilon=1,
             epsilonDecayFactor=.999,
             nTrainIterations=1,
@@ -467,3 +497,4 @@ if __name__ == "__main__":
     np.set_printoptions(suppress=True) # Turn off scientific notation
     np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
     play_ai_game()
+    #play_some_games()
