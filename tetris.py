@@ -387,6 +387,18 @@ class Board(object):
             ret += self.board_to_string(print_upcoming=True)
         return ret
 
+    def count_holes(self):
+        num_holes = 0
+        for x in range(self.width):
+            counting = False
+            for y in range(0, self.height):
+                if self.board[x][y] is not None:
+                    counting = True
+                else:
+                    if counting:
+                        num_holes += 1
+        return num_holes
+
 def play_random_game():
     b = Board()
     numMoves = 0
@@ -417,6 +429,31 @@ def play_min_height_game():
                 max_y = y
         (r, x, y) = max_move
         b.place(r, x, y)
+        if b.cleared.count(1) > 0:
+            print(b)
+            time.sleep(.25)
+        b.advance_game_state()
+        print(b)
+        time.sleep(.25)
+
+def play_min_holes_game():
+    b = Board()
+    print(b)
+    while(True):
+        if b.game_over:
+            break
+        best_score_move = None
+        best_score = -1
+        for move in b.valid_moves:
+            b2 = deepcopy(b)
+            b2.make_move(move)
+            holes = b2.count_holes()
+            y = move[2]
+            score = 1000 - holes + y
+            if score == -1 or score > best_score:
+                best_score = score
+                best_score_move = move
+        b.place(*best_score_move)
         if b.cleared.count(1) > 0:
             print(b)
             time.sleep(.25)
@@ -496,5 +533,6 @@ if __name__ == "__main__":
     #play_min_height_game()
     np.set_printoptions(suppress=True) # Turn off scientific notation
     np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
-    play_ai_game()
+    #play_ai_game()
     #play_some_games()
+    play_min_holes_game()
