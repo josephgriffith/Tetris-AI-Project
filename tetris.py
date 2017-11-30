@@ -443,14 +443,14 @@ def play_min_holes_game():
         if b.game_over:
             break
         best_score_move = None
-        best_score = -1
+        best_score = None
         for move in b.valid_moves:
             b2 = deepcopy(b)
             b2.make_move(move)
             holes = b2.count_holes()
             y = move[2]
-            score = 1000 - holes + y
-            if score == -1 or score > best_score:
+            score = y - (holes/8)
+            if best_score is None or score > best_score:
                 best_score = score
                 best_score_move = move
         b.place(*best_score_move)
