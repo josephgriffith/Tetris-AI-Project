@@ -127,96 +127,65 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
 
     return Qnet, outcomes
 
-def play_random_game():
+def play_game(strategyF, display=False, sleep=None):
+    """ Play a game of Tetris using the given strategy.  StrategyF takes a board and returns the best move for that board. """
     b = tetris.Board()
+    if display:
+        print(b)
     numMoves = 0
     while not b.game_over:
         numMoves += 1
-        (r, x, y) = random.choice(b.valid_moves)
-        b.place(r, x, y)
+        move = strategyF(b)
+        b.place(*move)
+
+        # Animate cleared lines
         if b.cleared.count(1) > 0:
-            print(b)
-            time.sleep(.25)
+            if display:
+                print(b)
+                if sleep is not None:
+                    time.sleep(sleep)
+
         b.advance_game_state()
-        print(b)
-        time.sleep(.25)
-    print(numMoves, "moves")
-
-def play_min_height_game():
-    b = tetris.Board()
-    print(b)
-    while not b.game_over:
-        max_move = None
-        max_y = -1
-        for move in b.valid_moves:
-            y = move[2]
-            if y > max_y:
-                max_move = move
-                max_y = y
-        (r, x, y) = max_move
-        b.place(r, x, y)
-        if b.cleared.count(1) > 0:
+        if display:
             print(b)
-            time.sleep(.25)
-        b.advance_game_state()
-        print(b)
-        time.sleep(.25)
+            if sleep is not None:
+                time.sleep(sleep)
+    if display:
+        print(numMoves, "moves")
 
-def play_one_min_holes_game(height_factor, holes_factor):
-    b = tetris.Board()
-    move_count = 0
-    while not b.game_over:
-        move_count += 1
-        best_score_move = None
-        best_score = None
-        for move in b.valid_moves:
-            b2 = deepcopy(b)
-            b2.make_move(move)
-            holes = b2.count_holes()
-            y = move[2]
-            score = height_factor * y - holes_factor * holes
-            if best_score is None or score > best_score:
-                best_score = score
-                best_score_move = move
-        b.make_move(best_score_move)
-    return move_count
+    return numMoves
 
-def play_several_min_holes_games():
-    num_games_per_test = 5
-    for i in np.linspace(.3, .7, num=10):
-        outcomes = []
-        for n in range(num_games_per_test):
-            outcome = play_one_min_holes_game(i, 1-i)
-            outcomes.append(outcome)
-            print("game", n, "outcome", outcome)
-        print("i", i, "min", min(outcomes), "max", max(outcomes), "avg", sum(outcomes)/len(outcomes), flush=True)
+def choose_best_move(board, moveScoreF):
+    """ Choose the best move based on a function that returns a score for each move.  The highest-scoring move will be chosen.
+    MoveScoreF takes a move and returns a score. """
+    best_score_move = None
+    best_score = None
+    for move in board.valid_moves:
+        score = moveScoreF(board, move)
+        if best_score is None or score > best_score:
+            best_score = score
+            best_score_move = move
+    return best_score_move
 
-def play_min_holes_game():
-    b = tetris.Board()
-    print(b)
-    while not b.game_over:
-        best_score_move = None
-        best_score = None
-        for move in b.valid_moves:
-            b2 = deepcopy(b)
-            b2.make_move(move)
-            holes = b2.count_holes()
-            y = move[2]
-            height_factor = .5
-            holes_factor = .5
-            score = height_factor * y - holes_factor * holes
-            if best_score is None or score > best_score:
-                best_score = score
-                best_score_move = move
-        b.place(*best_score_move)
-        if b.cleared.count(1) > 0:
-            print(b)
-            time.sleep(.1)
-        b.advance_game_state()
-        print(b)
-        time.sleep(.1)
+def randomMoveStrategy(board):
+    return random.choice(board.valid_moves)
 
-def what(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
+def minHeightStrategy(board):
+    return choose_best_move(board, lambda board, move: move[2])
+
+# TODO: rename all the min holes stuff
+def minHolesStrategy(board):
+    def minHolesScore(board, move):
+        b2 = deepcopy(board)
+        b2.make_move(move)
+        holes = b2.count_holes()
+        y = move[2]
+        height_factor = .5
+        holes_factor = .5
+        return height_factor * y - holes_factor * holes
+    return choose_best_move(board, minHolesScore)
+
+def play_ai_parameterized(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
     print("nReps", nReps, "hiddenLayers", hiddenLayers, "epsilon", epsilon, "epsilonDecayFactor", epsilonDecayFactor, "nTrainIterations", nTrainIterations, "nReplays", nReplays, ": ", end="", flush=True)
     startTime = time.time()
     (Qnet, outcomes) = train(nReps=nReps,
@@ -231,8 +200,7 @@ def what(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nRe
     average_game = sum(outcomes) / len(outcomes)
     print("longest", longest_game, "average", average_game, "elapsedTime", elapsedTime)
 
-
-def play_some_games():
+def play_several_ai_games():
     for i in range(1, 10):
         hiddenLayers = [1] * i
         nReps = 1000
@@ -241,7 +209,7 @@ def play_some_games():
         nTrainIterations = 1
         nReplays = 0
 
-        what(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays)
+        play_ai_parameterized(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays)
 
 def play_ai_game():
     (Qnet, outcomes) = train(nReps=5000,
@@ -253,30 +221,31 @@ def play_ai_game():
             nReplays=1)
     print(",".join(str(int(x)) for x in outcomes))
 
-    for i in range(1):
-        # Play a game using the trained AI
-        b = tetris.Board(10, 5)
-        print(b)
-        numMoves = 0
-        while not b.game_over:
-            move, Q = epsilonGreedy(Qnet, b, 0)
-            b.place(*move)
-            if b.cleared.count(1) > 0:
-                print(b)
-                time.sleep(.25)
-            b.advance_game_state()
-            numMoves += 1
-            print(b)
-            time.sleep(.25)
-        print(numMoves, "moves")
+    def AIStrategy(board):
+        move, Q = epsilonGreedy(Qnet, board, 0)
+        return move
+
+    play_game(AIStrategy, True, .25)
+
+def play_several_min_holes_games():
+    num_games_per_test = 5
+    for i in np.linspace(.3, .7, num=10):
+        outcomes = []
+        for n in range(num_games_per_test):
+            outcome = play_game(minHolesStrategy)
+            outcomes.append(outcome)
+            print("game", n, "outcome", outcome)
+        print("i", i, "min", min(outcomes), "max", max(outcomes), "avg", sum(outcomes)/len(outcomes), flush=True)
 
 if __name__ == "__main__":
-    #displayAllRotations()
-    #play_random_game()
-    #play_min_height_game()
-    np.set_printoptions(suppress=True) # Turn off scientific notation
-    np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
+    #play_game(randomMoveStrategy, True, .25)
+    #play_game(minHeightStrategy, True, .25)
+    play_game(minHolesStrategy, True, .1)
+
     #play_ai_game()
-    #play_some_games()
-    play_min_holes_game()
+
+    #np.set_printoptions(suppress=True) # Turn off scientific notation
+    #np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
+
+    #play_several_ai_games()
     #play_several_min_holes_games()
