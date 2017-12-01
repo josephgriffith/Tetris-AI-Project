@@ -279,12 +279,12 @@ class Board(object):
             return -1
         grid = self.next_piece.get_rotated_grid(rotation)
         for offset_y in range(self.height + 1):
-            for piece_x in range(width):
-                for piece_y in range(height):
-                    if piece_y + offset_y == self.height:
-                        # Off the bottom of the board
-                        return offset_y - 1;
-                    if self.board[piece_x + col][piece_y + offset_y] != None and grid[piece_x][piece_y] != 0:
+            for piece_y in range(height-1, -1, -1):
+                if piece_y + offset_y == self.height:
+                    # Off the bottom of the board
+                    return offset_y - 1;
+                for piece_x in range(width):
+                    if self.board[piece_x + col][piece_y + offset_y] is not None and grid[piece_x][piece_y] != 0:
                         # Did not fit
                         return offset_y-1
 
