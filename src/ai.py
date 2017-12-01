@@ -145,9 +145,7 @@ def play_random_game():
 def play_min_height_game():
     b = tetris.Board()
     print(b)
-    while(True):
-        if b.game_over:
-            break
+    while not b.game_over:
         max_move = None
         max_y = -1
         for move in b.valid_moves:
@@ -196,9 +194,7 @@ def play_several_min_holes_games():
 def play_min_holes_game():
     b = tetris.Board()
     print(b)
-    while(True):
-        if b.game_over:
-            break
+    while not b.game_over:
         best_score_move = None
         best_score = None
         for move in b.valid_moves:

@@ -18,6 +18,44 @@ class Piece(object):
     def get_rotated_grid(self, rotation):
         return np.rot90(self.grid, rotation)
 
+    @staticmethod
+    def choose_random_piece():
+        return random.choice(Piece.pieces())
+
+    @staticmethod
+    def pieces():
+        # generator that returns all the non-rotated pieces
+        # Note these are mirrored here since X is the first dimension and Y is the second.
+        I = Piece(((1,),
+                     (1,),
+                     (1,),
+                     (1,)), 2, "I")
+
+        T = Piece(((0, 1, 0),
+                     (1, 1, 1)), 4, "T")
+
+        J = Piece(((1, 0),
+                     (1, 0),
+                     (1, 1)), 4, "J")
+
+        L = Piece(((0, 1),
+                     (0, 1),
+                     (1, 1)), 4, "L")
+
+        O = Piece(((1, 1),
+                     (1, 1)), 1, "O")
+
+        Z = Piece(((1, 0),
+                     (1, 1),
+                     (0, 1)), 2, "Z")
+
+        S = Piece(((0, 1),
+                     (1, 1),
+                     (1, 0)), 2, "S")
+
+        return [I, T, J, L, O, Z, S]
+        #return [I, O]
+
 class Color(object):
     """ Enum to keep track of console color codes. """
     inverted_red = '\033[41m'
@@ -32,74 +70,35 @@ class Color(object):
     end = '\033[0m'
     bold = '\033[1m'
 
-def colorize(char):
-    if char == None:
-        return '  '
+    @staticmethod
+    def colorize(char):
+        if char == None:
+            return '  '
 
-    colors = {
-            'I': Color.inverted_red,
-            'T': Color.inverted_green,
-            'L': Color.inverted_yellow,
-            'J': Color.inverted_blue,
-            'O': Color.inverted_grey,
-            'S': Color.inverted_teal,
-            'Z': Color.inverted_purple,
-            ' ': Color.inverted_almostwhite
-            }
+        colors = {
+                'I': Color.inverted_red,
+                'T': Color.inverted_green,
+                'L': Color.inverted_yellow,
+                'J': Color.inverted_blue,
+                'O': Color.inverted_grey,
+                'S': Color.inverted_teal,
+                'Z': Color.inverted_purple,
+                ' ': Color.inverted_almostwhite
+                }
 
-    texture = '  ' if char == ' ' else '_|'
-    return colors[char] + Color.bold + texture + Color.end
-
-
-def pieces():
-    # generator that returns all the non-rotated pieces
-    # Note these are mirrored here since X is the first dimension and Y is the second.
-    I = Piece(((1,),
-                 (1,),
-                 (1,),
-                 (1,)), 2, "I")
-
-    T = Piece(((0, 1, 0),
-                 (1, 1, 1)), 4, "T")
-
-    J = Piece(((1, 0),
-                 (1, 0),
-                 (1, 1)), 4, "J")
-
-    L = Piece(((0, 1),
-                 (0, 1),
-                 (1, 1)), 4, "L")
-
-    O = Piece(((1, 1),
-                 (1, 1)), 1, "O")
-
-    Z = Piece(((1, 0),
-                 (1, 1),
-                 (0, 1)), 2, "Z")
-
-    S = Piece(((0, 1),
-                 (1, 1),
-                 (1, 0)), 2, "S")
-
-    return [I, T, J, L, O, Z, S]
-    #return [I, O]
+        texture = '  ' if char == ' ' else '_|'
+        return colors[char] + Color.bold + texture + Color.end
 
 class Board(object):
     def __init__(self, width=10, height=20):
         self.width = width
         self.height = height
-        self.board = self.make_board()
+        self.board = [[None] * self.height for i in range(self.width)]
         self.upcoming = [[None]*4 for i in range(4)]
-        self.all_pieces = list(pieces())
         self.cleared = [0]*height
         self.game_over = False
 
         self.advance_game_state()
-        self.paintPiece(self.upcoming)
-
-    def set_next_piece(self, piece):
-        self.next_piece = piece
-        self.upcoming = [[None]*4 for i in range(4)]
         self.paintPiece(self.upcoming)
 
     def getStateRepresentation(self):
@@ -138,14 +137,6 @@ class Board(object):
         rotOut[rot] = 1
 
         return [*colOut, *rotOut]
-
-    def choose_random_piece(self):
-        #self.all_pieces = self.all_pieces[1:] + self.all_pieces[:1]
-        #return self.all_pieces[0]
-        return random.choice(self.all_pieces)
-
-    def make_board(self):
-        return [[None] * self.height for i in range(self.width)]
 
     def fits_row(self, rotation, col):
         # Returns the one and only one row that the piece must be placed at in this column.
@@ -192,7 +183,7 @@ class Board(object):
 
     def advance_game_state(self):
         # Choose next piece
-        self.next_piece = self.choose_random_piece()
+        self.next_piece = Piece.choose_random_piece()
 
         # Clear cleared lines in the board
         new_row = self.height - 1
@@ -226,28 +217,21 @@ class Board(object):
         if not self.game_over:
             self.paintPiece(self.upcoming)
 
-    def drop(self, rotation, col):
-        row = self.fits_row(rotation, col)
-        if row == -1: # Invalid move requested
-            self.game_over = True
-        else:
-            self.place(rotation, col, row)
-
     def board_to_string(self, clear=False, print_upcoming=True):
         ret = "+" + "--" * (self.width) + "+\n"
         for y in range(self.height):
             ret += "|"
             for x in range(self.width):
                 if clear and self.cleared[y] == 1:
-                    ret += colorize(' ')
+                    ret += Color.colorize(' ')
                 else:
-                    ret += colorize(self.board[x][y])
+                    ret += Color.colorize(self.board[x][y])
             if y > 3 or print_upcoming == False:
                 ret += "|\n"
             else:
                 ret += "|\t\t"
                 for i in range(4):
-                    ret += colorize(self.upcoming[i][y])
+                    ret += Color.colorize(self.upcoming[i][y])
                 ret += "\n"
         ret += "+" + "--" * (self.width) + "+" + "\n"
         return ret
@@ -275,7 +259,7 @@ class Board(object):
         return num_holes
 
 def displayAllRotations():
-    all_pieces = list(pieces())
+    all_pieces = list(Piece.pieces())
     for i in all_pieces:
         b = Board()
         x, y = 0, 0
@@ -286,3 +270,5 @@ def displayAllRotations():
             y += 5
         print(b)
 
+if __name__ == "__main__":
+    displayAllRotations()
