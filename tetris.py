@@ -436,6 +436,35 @@ def play_min_height_game():
         print(b)
         time.sleep(.25)
 
+def play_one_min_holes_game(height_factor, holes_factor):
+    b = Board()
+    move_count = 0
+    while not b.game_over:
+        move_count += 1
+        best_score_move = None
+        best_score = None
+        for move in b.valid_moves:
+            b2 = deepcopy(b)
+            b2.make_move(move)
+            holes = b2.count_holes()
+            y = move[2]
+            score = height_factor * y - holes_factor * holes
+            if best_score is None or score > best_score:
+                best_score = score
+                best_score_move = move
+        b.make_move(best_score_move)
+    return move_count
+
+def play_several_min_holes_games():
+    num_games_per_test = 5
+    for i in np.linspace(.3, .7, num=10):
+        outcomes = []
+        for n in range(num_games_per_test):
+            outcome = play_one_min_holes_game(i, 1-i)
+            outcomes.append(outcome)
+            print("game", n, "outcome", outcome)
+        print("i", i, "min", min(outcomes), "max", max(outcomes), "avg", sum(outcomes)/len(outcomes), flush=True)
+
 def play_min_holes_game():
     b = Board()
     print(b)
@@ -449,17 +478,19 @@ def play_min_holes_game():
             b2.make_move(move)
             holes = b2.count_holes()
             y = move[2]
-            score = y - (holes/8)
+            height_factor = .5
+            holes_factor = .5
+            score = height_factor * y - holes_factor * holes
             if best_score is None or score > best_score:
                 best_score = score
                 best_score_move = move
         b.place(*best_score_move)
         if b.cleared.count(1) > 0:
             print(b)
-            time.sleep(.25)
+            time.sleep(.1)
         b.advance_game_state()
         print(b)
-        time.sleep(.25)
+        time.sleep(.1)
 
 def displayAllRotations():
     all_pieces = list(pieces())
@@ -536,3 +567,4 @@ if __name__ == "__main__":
     #play_ai_game()
     #play_some_games()
     play_min_holes_game()
+    #play_several_min_holes_games()
