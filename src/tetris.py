@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import time
 
 class Piece(object):
     def __init__(self, grid, num_rotations, which_piece):
@@ -257,6 +258,35 @@ class Board(object):
                     if counting:
                         num_holes += 1
         return num_holes
+
+    def play_game(self, strategyF, display=False, sleep=None):
+        """ Play a game of Tetris using the given strategy.  StrategyF takes a board and returns the best move for that board. """
+        # TODO: Board() class is too big with this method...
+        if display:
+            print(self)
+        numMoves = 0
+        while not self.game_over:
+            numMoves += 1
+            move = strategyF(self)
+            self.place(*move)
+
+            # Animate cleared lines
+            if self.cleared.count(1) > 0:
+                if display:
+                    print(self)
+                    if sleep is not None:
+                        time.sleep(sleep)
+
+            self.advance_game_state()
+            if display:
+                print(self)
+                if sleep is not None:
+                    time.sleep(sleep)
+        if display:
+            print(numMoves, "moves")
+
+        return numMoves
+
 
 def displayAllRotations():
     all_pieces = list(Piece.pieces())

@@ -125,35 +125,6 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
 
     return Qnet, outcomes
 
-def play_game(strategyF, display=False, sleep=None):
-    """ Play a game of Tetris using the given strategy.  StrategyF takes a board and returns the best move for that board. """
-    # TODO: should this function be in tetris.Board()?
-    b = tetris.Board()
-    if display:
-        print(b)
-    numMoves = 0
-    while not b.game_over:
-        numMoves += 1
-        move = strategyF(b)
-        b.place(*move)
-
-        # Animate cleared lines
-        if b.cleared.count(1) > 0:
-            if display:
-                print(b)
-                if sleep is not None:
-                    time.sleep(sleep)
-
-        b.advance_game_state()
-        if display:
-            print(b)
-            if sleep is not None:
-                time.sleep(sleep)
-    if display:
-        print(numMoves, "moves")
-
-    return numMoves
-
 def choose_best_move(board, moveScoreF):
     """ Choose the best move based on a function that returns a score for each move.  The highest-scoring move will be chosen.
     MoveScoreF takes a move and returns a score. """
@@ -223,22 +194,22 @@ def play_ai_game():
         move, Q = epsilonGreedy(Qnet, board, 0)
         return move
 
-    play_game(AIStrategy, True, .25)
+    tetris.Board().play_game(AIStrategy, True, .25)
 
 def play_several_min_holes_games():
     num_games_per_test = 5
     for i in np.linspace(.3, .7, num=10):
         outcomes = []
         for n in range(num_games_per_test):
-            outcome = play_game(holesAndHeightStrategy)
+            outcome = tetris.Board().play_game(holesAndHeightStrategy)
             outcomes.append(outcome)
             print("game", n, "outcome", outcome)
         print("i", i, "min", min(outcomes), "max", max(outcomes), "avg", sum(outcomes)/len(outcomes), flush=True)
 
 if __name__ == "__main__":
-    #play_game(randomMoveStrategy, True, .25)
-    #play_game(minHeightStrategy, True, .25)
-    play_game(holesAndHeightStrategy, True, .1)
+    #tetris.Board().play_game(randomMoveStrategy, True, .25)
+    #tetris.Board().play_game(minHeightStrategy, True, .25)
+    tetris.Board().play_game(holesAndHeightStrategy, True, .1)
 
     #play_ai_game()
 
