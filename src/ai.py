@@ -53,7 +53,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
 
         # Play a game, collecting samples
         samples = []
-        samplesNextStateForReplay = [] # TODO: this information is duplicated with samples...
+        samplesNextStateForReplay = []
         board = tetris.Board(boardWidth, boardHeight)
         move, _ = epsilonGreedy(Qnet, board, epsilon)
         done = False
@@ -64,11 +64,9 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
             if step > 100:
                 return Qnet, outcomes
 
-            # TODO: move contains row and probably shouldn't
-
             # print(board)
 
-            newBoard = deepcopy(board) # TODO: make a function that returns the new state without modifying the current state, instead of deepcopy
+            newBoard = deepcopy(board)
             newBoard.make_move(move)
 
             if newBoard.game_over:
@@ -129,6 +127,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
 
 def play_game(strategyF, display=False, sleep=None):
     """ Play a game of Tetris using the given strategy.  StrategyF takes a board and returns the best move for that board. """
+    # TODO: should this function be in tetris.Board()?
     b = tetris.Board()
     if display:
         print(b)
@@ -173,9 +172,8 @@ def randomMoveStrategy(board):
 def minHeightStrategy(board):
     return choose_best_move(board, lambda board, move: move[2])
 
-# TODO: rename all the min holes stuff
-def minHolesStrategy(board):
-    def minHolesScore(board, move):
+def holesAndHeightStrategy(board):
+    def holesAndHeightScore(board, move):
         b2 = deepcopy(board)
         b2.make_move(move)
         holes = b2.count_holes()
@@ -183,7 +181,7 @@ def minHolesStrategy(board):
         height_factor = .5
         holes_factor = .5
         return height_factor * y - holes_factor * holes
-    return choose_best_move(board, minHolesScore)
+    return choose_best_move(board, holesAndHeightScore)
 
 def play_ai_parameterized(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays):
     print("nReps", nReps, "hiddenLayers", hiddenLayers, "epsilon", epsilon, "epsilonDecayFactor", epsilonDecayFactor, "nTrainIterations", nTrainIterations, "nReplays", nReplays, ": ", end="", flush=True)
@@ -232,7 +230,7 @@ def play_several_min_holes_games():
     for i in np.linspace(.3, .7, num=10):
         outcomes = []
         for n in range(num_games_per_test):
-            outcome = play_game(minHolesStrategy)
+            outcome = play_game(holesAndHeightStrategy)
             outcomes.append(outcome)
             print("game", n, "outcome", outcome)
         print("i", i, "min", min(outcomes), "max", max(outcomes), "avg", sum(outcomes)/len(outcomes), flush=True)
@@ -240,7 +238,7 @@ def play_several_min_holes_games():
 if __name__ == "__main__":
     #play_game(randomMoveStrategy, True, .25)
     #play_game(minHeightStrategy, True, .25)
-    play_game(minHolesStrategy, True, .1)
+    play_game(holesAndHeightStrategy, True, .1)
 
     #play_ai_game()
 
