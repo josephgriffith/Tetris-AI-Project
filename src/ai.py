@@ -145,7 +145,7 @@ def minHeightStrategy(board):
 
 def holesAndHeightStrategy(board):
     def holesAndHeightScore(board, move):
-        b2 = deepcopy(board)
+        b2 = deepcopy(board) # 63% of the time
         b2.make_move(move)
         holes = b2.count_holes()
         y = move[2]

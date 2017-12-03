@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import time
+import functools
 
 class Piece(object):
     def __init__(self, grid, num_rotations, which_piece):
@@ -19,6 +20,7 @@ class Piece(object):
     def get_rotated_grid(self, rotation):
         return np.rot90(self.grid, rotation)
 
+    @functools.lru_cache(128) # memoize
     def piece_depths(self, rotation):
         ''' returns the depth of each column in the piece for a given orientation '''
         grid = self.get_rotated_grid(rotation)
@@ -168,16 +170,6 @@ class Board(object):
             if highest_col is None or col_height < highest_col:
                 highest_col = col_height
         return highest_col
-        #grid = self.next_piece.get_rotated_grid(rotation)
-        #for offset_y in range(self.height + 1):
-        #    for piece_y in range(height-1, -1, -1):
-        #        if piece_y + offset_y == self.height:
-        #            # Off the bottom of the board
-        #            return offset_y - 1;
-        #        for piece_x in range(width):
-        #            if self.board[piece_x + col][piece_y + offset_y] is not None and grid[piece_x][piece_y] != 0:
-        #                # Did not fit
-        #                return offset_y-1
 
     def paintPiece(self, canvas, rotation=0, x=0, y=0):
         (width, height) = self.next_piece.get_dimensions(rotation)
