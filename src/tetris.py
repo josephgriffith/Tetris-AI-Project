@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import time
+import functools
 
 class Piece(object):
     def __init__(self, grid, num_rotations, which_piece):
@@ -18,6 +19,18 @@ class Piece(object):
 
     def get_rotated_grid(self, rotation):
         return np.rot90(self.grid, rotation)
+
+    @functools.lru_cache(128) # memoize
+    def piece_depths(self, rotation):
+        ''' returns the depth of each column in the piece for a given orientation '''
+        grid = self.get_rotated_grid(rotation)
+        depths = []
+        for x in range(len(grid)):
+            for y in range(len(grid[0])-1, -1, -1):
+                if grid[x][y] == 1:
+                    depths.append(y+1)
+                    break
+        return depths
 
     @staticmethod
     def choose_random_piece():
@@ -139,21 +152,24 @@ class Board(object):
 
         return [*colOut, *rotOut]
 
-    def fits_row(self, rotation, col):
+    def fits_row(self, rotation, col, heights):
         # Returns the one and only one row that the piece must be placed at in this column.
         (width, height) = self.next_piece.get_dimensions(rotation)
         if width + col > self.width:
             return -1
-        grid = self.next_piece.get_rotated_grid(rotation)
-        for offset_y in range(self.height + 1):
-            for piece_y in range(height-1, -1, -1):
-                if piece_y + offset_y == self.height:
-                    # Off the bottom of the board
-                    return offset_y - 1;
-                for piece_x in range(width):
-                    if self.board[piece_x + col][piece_y + offset_y] is not None and grid[piece_x][piece_y] != 0:
-                        # Did not fit
-                        return offset_y-1
+        piece_depths = self.next_piece.piece_depths(rotation)
+        highest_col = None
+        for piece_x in range(width):
+            # 0  +--------+
+            # 1  |        |
+            # 2  |        |
+            # ...         |
+            # 20 +--------+
+            board_height = heights[col + piece_x]
+            col_height = board_height - piece_depths[piece_x]
+            if highest_col is None or col_height < highest_col:
+                highest_col = col_height
+        return highest_col
 
     def paintPiece(self, canvas, rotation=0, x=0, y=0):
         (width, height) = self.next_piece.get_dimensions(rotation)
@@ -200,10 +216,11 @@ class Board(object):
         self.cleared = [0]*self.height
 
         # Find all valid moves
+        heights = self.calc_heights()
         self.valid_moves = []
         for rot in range(self.next_piece.num_rotations):
             for col in range(self.width):
-                row = self.fits_row(rot, col)
+                row = self.fits_row(rot, col, heights)
                 if row >= 0:
                     self.valid_moves.append((rot, col, row))
 
@@ -217,6 +234,17 @@ class Board(object):
         # Draw upcoming
         if not self.game_over:
             self.paintPiece(self.upcoming)
+
+    def calc_heights(self):
+        """ Returns an array of 10 integers representing the
+        visually highest (numerically lowest) turned-on square in each column. """
+        heights = [self.height]*self.width
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.board[x][y] is not None:
+                    heights[x] = y
+                    break
+        return heights
 
     def board_to_string(self, clear=False, print_upcoming=True):
         ret = "+" + "--" * (self.width) + "+\n"
