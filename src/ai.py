@@ -209,7 +209,12 @@ def play_several_min_holes_games():
 if __name__ == "__main__":
     #tetris.Board().play_game(randomMoveStrategy, True, .25)
     #tetris.Board().play_game(minHeightStrategy, True, .25)
-    tetris.Board().play_game(holesAndHeightStrategy, True, .1)
+    #tetris.Board().play_game(holesAndHeightStrategy, True, .1)
+    start = time.time()
+    outcome = tetris.Board().play_game(holesAndHeightStrategy)
+    print(time.time() - start, outcome)
+
+
 
     #play_ai_game()
 
