@@ -40,7 +40,7 @@ def train(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nR
     # The output from the neural network is:
     #   A single number to represent the estimated number of moves to game over.
     boardWidth = 10
-    boardHeight = 5
+    boardHeight = 20
     numDataCols = boardWidth * boardHeight + 7 + 10 + 4
     Qnet = nn.NeuralNetwork(numDataCols, hiddenLayers, 1)
     Qnet._standardizeT = lambda x: x
@@ -181,11 +181,11 @@ def play_several_ai_games():
         play_ai_parameterized(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays)
 
 def play_ai_game():
-    (Qnet, outcomes) = train(nReps=5000,
+    (Qnet, outcomes) = train(nReps=100,
             #hiddenLayers=[20, 10, 10, 20],
             hiddenLayers=[50, 20, 10, 2, 10, 20, 50],
             epsilon=1,
-            epsilonDecayFactor=.999,
+            epsilonDecayFactor=.95,
             nTrainIterations=1,
             nReplays=1)
     print(",".join(str(int(x)) for x in outcomes))
