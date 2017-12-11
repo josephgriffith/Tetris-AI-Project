@@ -143,7 +143,7 @@ def randomMoveStrategy(board):
 def minHeightStrategy(board):
     return choose_best_move(board, lambda board, move: move[2])
 
-def holesAndHeightStrategy(board, height_favor_factor=.5):
+def holesAndHeightStrategy(board, height_favor_factor=.46):
     def holesAndHeightScore(board, move):
         b2 = deepcopy(board) # 63% of the time
         b2.make_move(move)
@@ -199,7 +199,7 @@ def play_ai_game(reps=100, layers=[50, 20, 10, 2, 10, 20, 50], eps=1, decay=.95,
 def play_several_min_holes_games():
     print("numGames, factor, min, max, avg")
     num_games_per_test = 30
-    for i in np.linspace(.4, .6, num=15):
+    for i in np.linspace(.4, .6, num=21):
         outcomes = []
         for n in range(num_games_per_test):
             # Play a game with the holesAndHeightStrategy, using factor i
@@ -210,7 +210,7 @@ def play_several_min_holes_games():
 if __name__ == "__main__":
     #tetris.Board().play_game(randomMoveStrategy, True, .25)
     #tetris.Board().play_game(minHeightStrategy, True, .25)
-    #tetris.Board().play_game(holesAndHeightStrategy, True, .1)
+    tetris.Board().play_game(holesAndHeightStrategy, True, .1)
 
     #play_ai_game()
 
@@ -218,4 +218,4 @@ if __name__ == "__main__":
     #np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
 
     #play_several_ai_games()
-    play_several_min_holes_games()
+    #play_several_min_holes_games()
