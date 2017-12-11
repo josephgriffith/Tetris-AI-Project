@@ -180,14 +180,14 @@ def play_several_ai_games():
 
         play_ai_parameterized(nReps, hiddenLayers, epsilon, epsilonDecayFactor, nTrainIterations, nReplays)
 
-def play_ai_game():
-    (Qnet, outcomes) = train(nReps=100,
+def play_ai_game(reps=100, layers=[50, 20, 10, 2, 10, 20, 50], eps=1, decay=.95, iterations=1, replays=1):
+    (Qnet, outcomes) = train(nReps=reps,
             #hiddenLayers=[20, 10, 10, 20],
-            hiddenLayers=[50, 20, 10, 2, 10, 20, 50],
-            epsilon=1,
-            epsilonDecayFactor=.95,
-            nTrainIterations=1,
-            nReplays=1)
+            hiddenLayers=layers,
+            epsilon=eps,
+            epsilonDecayFactor=decay,
+            nTrainIterations=iterations,
+            nReplays=replays)
     print(",".join(str(int(x)) for x in outcomes))
 
     def AIStrategy(board):
