@@ -143,14 +143,14 @@ def randomMoveStrategy(board):
 def minHeightStrategy(board):
     return choose_best_move(board, lambda board, move: move[2])
 
-def holesAndHeightStrategy(board):
+def holesAndHeightStrategy(board, height_favor_factor=.5):
     def holesAndHeightScore(board, move):
         b2 = deepcopy(board) # 63% of the time
         b2.make_move(move)
         holes = b2.count_holes()
         y = move[2]
-        height_factor = .5
-        holes_factor = .5
+        height_factor = height_favor_factor
+        holes_factor = 1 - height_favor_factor
         return height_factor * y - holes_factor * holes
     return choose_best_move(board, holesAndHeightScore)
 
@@ -197,19 +197,20 @@ def play_ai_game(reps=100, layers=[50, 20, 10, 2, 10, 20, 50], eps=1, decay=.95,
     tetris.Board().play_game(AIStrategy, True, .25)
 
 def play_several_min_holes_games():
-    num_games_per_test = 5
-    for i in np.linspace(.3, .7, num=10):
+    print("numGames, factor, min, max, avg")
+    num_games_per_test = 30
+    for i in np.linspace(.4, .6, num=15):
         outcomes = []
         for n in range(num_games_per_test):
-            outcome = tetris.Board().play_game(holesAndHeightStrategy)
+            # Play a game with the holesAndHeightStrategy, using factor i
+            outcome = tetris.Board().play_game(lambda board: holesAndHeightStrategy(board, i))
             outcomes.append(outcome)
-            print("game", n, "outcome", outcome)
-        print("i", i, "min", min(outcomes), "max", max(outcomes), "avg", sum(outcomes)/len(outcomes), flush=True)
+        print(num_games_per_test, i, min(outcomes), max(outcomes), sum(outcomes)/len(outcomes), sep=",", flush=True)
 
 if __name__ == "__main__":
     #tetris.Board().play_game(randomMoveStrategy, True, .25)
     #tetris.Board().play_game(minHeightStrategy, True, .25)
-    tetris.Board().play_game(holesAndHeightStrategy, True, .1)
+    #tetris.Board().play_game(holesAndHeightStrategy, True, .1)
 
     #play_ai_game()
 
@@ -217,4 +218,4 @@ if __name__ == "__main__":
     #np.set_printoptions(threshold=np.inf) # Print the whole outcomes array
 
     #play_several_ai_games()
-    #play_several_min_holes_games()
+    play_several_min_holes_games()
